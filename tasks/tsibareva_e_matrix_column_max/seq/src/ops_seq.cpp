@@ -1,17 +1,16 @@
 #include "tsibareva_e_matrix_column_max/seq/include/ops_seq.hpp"
 
-#include <numeric>
+#include <algorithm>
+#include <cstddef>
 #include <vector>
 
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace tsibareva_e_matrix_column_max {
 
 TsibarevaEMatrixColumnMaxSEQ::TsibarevaEMatrixColumnMaxSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = std::vector<std::vector<int>>(in);
-  // GetInput().swap(const_cast<InType &>(in)); (не сработало в CI)
   GetOutput() = std::vector<int>();
 }
 
@@ -55,9 +54,7 @@ bool TsibarevaEMatrixColumnMaxSEQ::RunImpl() {
   for (size_t col = 0; col < num_cols; ++col) {
     int max_val = matrix[0][col];
     for (size_t row = 1; row < matrix.size(); ++row) {
-      if (matrix[row][col] > max_val) {
-        max_val = matrix[row][col];
-      }
+      max_val = std::max(matrix[row][col], max_val);
     }
     column_maxs[col] = max_val;
   }

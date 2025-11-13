@@ -15,7 +15,7 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
   OutType expected_output_{};
 
   void SetUp() override {
-    input_data_ = GenerateMatrixFunc(kMatrixRows_, kMatrixCols_, MatrixType::COLUMN_MAX_MIDDLE);
+    input_data_ = GenerateMatrixFunc(kMatrixRows_, kMatrixCols_, MatrixType::kColumnMaxMiddle);
     expected_output_ = GenerateExpectedOutput(input_data_);
   }
 

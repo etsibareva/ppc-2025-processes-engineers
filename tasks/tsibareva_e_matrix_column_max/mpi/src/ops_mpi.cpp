@@ -3,18 +3,16 @@
 #include <mpi.h>
 
 #include <algorithm>
-#include <numeric>
+#include <cstddef>
 #include <vector>
 
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace tsibareva_e_matrix_column_max {
 
 TsibarevaEMatrixColumnMaxMPI::TsibarevaEMatrixColumnMaxMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = std::vector<std::vector<int>>(in);
-  // GetInput().swap(const_cast<InType &>(in)); (не сработало в CI)
   GetOutput() = std::vector<int>();
 }
 
@@ -48,7 +46,8 @@ bool TsibarevaEMatrixColumnMaxMPI::PreProcessingImpl() {
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
-  int world_rank, world_size;
+  int world_rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
@@ -58,12 +57,10 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
 
   std::vector<int> local_maxs;
 
-  for (size_t col = static_cast<size_t>(world_rank); col < num_cols; col += static_cast<size_t>(world_size)) {
+  for (auto col = static_cast<size_t>(world_rank); col < num_cols; col += static_cast<size_t>(world_size)) {
     int max_val = matrix[0][col];
     for (size_t row = 1; row < num_rows; ++row) {
-      if (matrix[row][col] > max_val) {
-        max_val = matrix[row][col];
-      }
+      max_val = std::max(matrix[row][col], max_val);
     }
     local_maxs.push_back(max_val);
   }
@@ -73,7 +70,7 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
 
     for (int proc = 0; proc < world_size; proc++) {
       int proc_count = 0;
-      for (size_t col = static_cast<size_t>(proc); col < num_cols; col += static_cast<size_t>(world_size)) {
+      for (auto col = static_cast<size_t>(proc); col < num_cols; col += static_cast<size_t>(world_size)) {
         proc_count++;
       }
 
@@ -87,7 +84,7 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
         }
 
         int idx = 0;
-        for (size_t col = static_cast<size_t>(proc); col < num_cols; col += static_cast<size_t>(world_size)) {
+        for (auto col = static_cast<size_t>(proc); col < num_cols; col += static_cast<size_t>(world_size)) {
           final_result_[col] = proc_maxs[idx++];
         }
       }
@@ -104,7 +101,8 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::PostProcessingImpl() {
-  int world_rank, world_size;
+  int world_rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
@@ -118,7 +116,7 @@ bool TsibarevaEMatrixColumnMaxMPI::PostProcessingImpl() {
   }
 
   // std::cout << "Process " << world_rank << " reached bcast" << std::endl;
-  MPI_Bcast(GetOutput().data(), num_cols, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(GetOutput().data(), static_cast<int>(num_cols), MPI_INT, 0, MPI_COMM_WORLD);
   // std::cout << "Process " << world_rank << " passed bcast" << std::endl;
 
   return true;
