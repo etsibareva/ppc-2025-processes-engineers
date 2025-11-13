@@ -10,8 +10,8 @@ namespace tsibareva_e_matrix_column_max {
 
 TsibarevaEMatrixColumnMaxSEQ::TsibarevaEMatrixColumnMaxSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
-  // GetInput() = std::vector<std::vector<int>>(in);
-  GetInput().swap(const_cast<InType &>(in));
+  GetInput() = std::vector<std::vector<int>>(in);
+  // GetInput().swap(const_cast<InType &>(in)); (не сработало в CI)
   GetOutput() = std::vector<int>();
 }
 
