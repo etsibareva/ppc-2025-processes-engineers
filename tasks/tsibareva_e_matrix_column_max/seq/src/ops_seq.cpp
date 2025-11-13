@@ -7,7 +7,7 @@
 #include "util/include/util.hpp"
 
 namespace tsibareva_e_matrix_column_max {
- 
+
 TsibarevaEMatrixColumnMaxSEQ::TsibarevaEMatrixColumnMaxSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
@@ -15,12 +15,12 @@ TsibarevaEMatrixColumnMaxSEQ::TsibarevaEMatrixColumnMaxSEQ(const InType &in) {
 }
 
 bool TsibarevaEMatrixColumnMaxSEQ::ValidationImpl() {
-  const auto& matrix = GetInput();
+  const auto &matrix = GetInput();
 
   if (matrix.empty()) {
     return false;
   }
-  
+
   if (matrix[0].empty()) {
     return false;
   }
@@ -43,14 +43,14 @@ bool TsibarevaEMatrixColumnMaxSEQ::PreProcessingImpl() {
 }
 
 bool TsibarevaEMatrixColumnMaxSEQ::RunImpl() {
-  const auto& matrix = GetInput();
+  const auto &matrix = GetInput();
   if (matrix.empty()) {
     return false;
   }
 
-  auto& column_maxs = GetOutput();
+  auto &column_maxs = GetOutput();
   size_t num_cols = matrix[0].size();
-  
+
   for (size_t col = 0; col < num_cols; ++col) {
     int max_val = matrix[0][col];
     for (size_t row = 1; row < matrix.size(); ++row) {

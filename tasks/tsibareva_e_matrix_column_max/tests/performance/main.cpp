@@ -1,13 +1,13 @@
 #include <gtest/gtest.h>
 
-#include "tsibareva_e_matrix_column_max/test_data/include/test_data_generator.hpp"
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
 #include "tsibareva_e_matrix_column_max/mpi/include/ops_mpi.hpp"
 #include "tsibareva_e_matrix_column_max/seq/include/ops_seq.hpp"
+#include "tsibareva_e_matrix_column_max/test_data/include/test_data_generator.hpp"
 #include "util/include/perf_test_util.hpp"
 
 namespace tsibareva_e_matrix_column_max {
- 
+
 class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
   const int kMatrixRows_ = 5000;
   const int kMatrixCols_ = 5000;
@@ -33,7 +33,8 @@ TEST_P(TsibarevaERunPerfTestProcesses, RunPerfModes) {
 }
 
 const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, TsibarevaEMatrixColumnMaxMPI, TsibarevaEMatrixColumnMaxSEQ>(PPC_SETTINGS_tsibareva_e_matrix_column_max);
+    ppc::util::MakeAllPerfTasks<InType, TsibarevaEMatrixColumnMaxMPI, TsibarevaEMatrixColumnMaxSEQ>(
+        PPC_SETTINGS_tsibareva_e_matrix_column_max);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 

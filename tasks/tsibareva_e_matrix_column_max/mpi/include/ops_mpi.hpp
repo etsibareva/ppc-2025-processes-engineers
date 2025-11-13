@@ -1,7 +1,7 @@
 #pragma once
 
-#include "tsibareva_e_matrix_column_max/common/include/common.hpp"
 #include "task/include/task.hpp"
+#include "tsibareva_e_matrix_column_max/common/include/common.hpp"
 
 namespace tsibareva_e_matrix_column_max {
 
