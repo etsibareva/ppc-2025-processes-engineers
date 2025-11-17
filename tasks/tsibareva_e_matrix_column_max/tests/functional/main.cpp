@@ -54,7 +54,7 @@ TEST_P(TsibarevaERunFuncTestsProcesses, MatmulFromPic) {
 const std::array<TestType, 33> kTestParams = {
     {std::make_tuple(1, 1, MatrixType::kConstant, "single"),
      std::make_tuple(1, 10, MatrixType::kAscending, "single_row"),
-     std::make_tuple(10, 1, MatrixType::kAscending, "single_col"),
+     std::make_tuple(3, 1, MatrixType::kAscending, "single_col"),
 
      std::make_tuple(5, 5, MatrixType::kAllZeros, "all_zeros"),
      std::make_tuple(5, 5, MatrixType::kAllNegative, "all_negative"),
@@ -133,7 +133,6 @@ TEST(TsibarevaEMatrixColumnMaxSEQ, ZeroColumnsMatrixShouldFailValidation) {
   ASSERT_FALSE(success);
 }
 
-// Специальный тест для покрытия вспомогательной функции CollectResultsFromAllProcesses.
 TEST(TsibarevaEMatrixColumnMaxMPI, NullProcCount) {
   auto matrix = GenerateMatrixFunc(5, 3, MatrixType::kConstant);
   TsibarevaEMatrixColumnMaxMPI task(matrix);

@@ -22,7 +22,6 @@ class TsibarevaEMatrixColumnMaxMPI : public BaseTask {
   bool PostProcessingImpl() override;
 
   void CollectResultsFromAllProcesses(const std::vector<int> &local_maxs, int world_size, size_t num_cols);
-  void StoreProcessorResults(int proc, const std::vector<int> &proc_maxs, int world_size, size_t num_cols);
 
   std::vector<int> final_result_;
 };
