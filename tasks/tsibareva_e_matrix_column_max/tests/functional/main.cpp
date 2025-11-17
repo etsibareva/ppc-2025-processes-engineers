@@ -21,7 +21,6 @@ class TsibarevaERunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InTyp
     int cols = std::get<1>(test_param);
     std::string desc = std::get<3>(test_param);
     return std::to_string(rows) + "x" + std::to_string(cols) + "_" + desc;
-    // return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
   }
 
  protected:
@@ -105,7 +104,6 @@ const auto kPerfTestName = TsibarevaERunFuncTestsProcesses::PrintFuncTestName<Ts
 
 INSTANTIATE_TEST_SUITE_P(PicMatrixTests, TsibarevaERunFuncTestsProcesses, kGtestValues, kPerfTestName);
 
-// Дополнительные проверки на пустые значения векторов, составлящих матрицу
 TEST(TsibarevaEMatrixColumnMaxMPI, EmptyMatrixShouldFailValidation) {
   auto matrix = GenerateMatrixFunc(0, 0, MatrixType::kAscending);
   TsibarevaEMatrixColumnMaxMPI task(matrix);

@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <iostream>
 #include <vector>
 
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
@@ -127,9 +126,7 @@ bool TsibarevaEMatrixColumnMaxMPI::PostProcessingImpl() {
     GetOutput().resize(num_cols);
   }
 
-  // std::cout << "Process " << world_rank << " reached bcast" << std::endl;
   MPI_Bcast(GetOutput().data(), static_cast<int>(num_cols), MPI_INT, 0, MPI_COMM_WORLD);
-  // std::cout << "Process " << world_rank << " passed bcast" << std::endl;
 
   return true;
 }
