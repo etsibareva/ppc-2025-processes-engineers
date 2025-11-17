@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <iostream>
 #include <vector>
 
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
@@ -66,38 +67,59 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
   }
 
   if (world_rank == 0) {
-    final_result_.resize(num_cols);
-
-    for (int proc = 0; proc < world_size; proc++) {
-      int proc_count = 0;
-      for (auto col = static_cast<size_t>(proc); col < num_cols; col += static_cast<size_t>(world_size)) {
-        proc_count++;
-      }
-
-      if (proc_count > 0) {
-        std::vector<int> proc_maxs(static_cast<size_t>(proc_count));
-
-        if (proc == 0) {
-          proc_maxs = local_maxs;
-        } else {
-          MPI_Recv(proc_maxs.data(), proc_count, MPI_INT, proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        }
-
-        int idx = 0;
-        for (auto col = static_cast<size_t>(proc); col < num_cols; col += static_cast<size_t>(world_size)) {
-          final_result_[col] = proc_maxs[idx++];
-        }
-      }
-    }
+    CollectResultsFromAllProcesses(local_maxs, world_size, num_cols);
   } else {
-    if (!local_maxs.empty()) {
-      MPI_Send(local_maxs.data(), static_cast<int>(local_maxs.size()), MPI_INT, 0, 0, MPI_COMM_WORLD);
-    }
+    SendLocalResults(local_maxs);
   }
+
+  std::cout << "Process " << world_rank << " req barrier" << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "Process " << world_rank << " passed barrier" << std::endl;
 
   // std::cout << "Process " << world_rank << " passed RunImpl" << std::endl;
 
   return true;
+}
+
+void TsibarevaEMatrixColumnMaxMPI::CollectResultsFromAllProcesses(const std::vector<int> &local_maxs, int world_size,
+                                                                  size_t num_cols) {
+  final_result_.resize(num_cols);
+
+  StoreProcessorResults(0, local_maxs, world_size, num_cols);
+
+  for (int proc = 1; proc < world_size; proc++) {
+    int proc_count = CountColumnsForProcessor(proc, world_size, num_cols);
+
+    if (proc_count <= 0) {
+      continue;
+    }
+    std::vector<int> proc_maxs(static_cast<size_t>(proc_count));
+
+    MPI_Recv(proc_maxs.data(), proc_count, MPI_INT, proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    StoreProcessorResults(proc, proc_maxs, world_size, num_cols);
+  }
+}
+
+void TsibarevaEMatrixColumnMaxMPI::StoreProcessorResults(int proc, const std::vector<int> &proc_maxs, int world_size,
+                                                         size_t num_cols) {
+  int idx = 0;
+  for (size_t col = proc; col < num_cols; col += world_size) {
+    final_result_[col] = proc_maxs[idx++];
+  }
+}
+
+int TsibarevaEMatrixColumnMaxMPI::CountColumnsForProcessor(int proc, int world_size, size_t num_cols) {
+  int count = 0;
+  for (size_t col = proc; col < num_cols; col += world_size) {
+    count++;
+  }
+  return count;
+}
+
+void TsibarevaEMatrixColumnMaxMPI::SendLocalResults(const std::vector<int> &local_maxs) {
+  if (!local_maxs.empty()) {
+    MPI_Send(local_maxs.data(), static_cast<int>(local_maxs.size()), MPI_INT, 0, 0, MPI_COMM_WORLD);
+  }
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::PostProcessingImpl() {
