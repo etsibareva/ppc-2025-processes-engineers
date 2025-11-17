@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <tuple>
@@ -321,9 +323,8 @@ inline std::vector<std::vector<int>> GenerateMatrixFunc(int rows, int cols, Matr
       return GenerateIdenticalRowsMatrix(rows, cols);
     case MatrixType::kDuplicateMaximum:
       return GenerateDuplicateMaximumMatrix(rows, cols);
-    default:
-      return GenerateAscendingMatrix(rows, cols);
   }
+  return GenerateAscendingMatrix(rows, cols);
 }
 
 inline std::vector<int> GenerateExpectedOutput(const std::vector<std::vector<int>> &matrix) {

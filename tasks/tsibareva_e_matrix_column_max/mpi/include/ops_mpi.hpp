@@ -23,7 +23,6 @@ class TsibarevaEMatrixColumnMaxMPI : public BaseTask {
 
   void CollectResultsFromAllProcesses(const std::vector<int> &local_maxs, int world_size, size_t num_cols);
   void StoreProcessorResults(int proc, const std::vector<int> &proc_maxs, int world_size, size_t num_cols);
-  static void SendLocalResults(const std::vector<int> &local_maxs);
 
   std::vector<int> final_result_;
 };

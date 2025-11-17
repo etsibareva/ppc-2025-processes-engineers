@@ -8,15 +8,12 @@
 namespace tsibareva_e_matrix_column_max {
 
 class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kMatrixRows_ = 5000;
-  const int kMatrixCols_ = 5000;
+  const int kMatrixRows_ = 10000;
+  const int kMatrixCols_ = 10000;
   InType input_data_;
   OutType expected_output_;
 
-  void SetUp() override {
-    input_data_ = GenerateMatrixFunc(kMatrixRows_, kMatrixCols_, MatrixType::kColumnMaxMiddle);
-    expected_output_ = GenerateExpectedOutput(input_data_);
-  }
+  void SetUp() override {}
 
   bool CheckTestOutputData(OutType &output_data) final {
     return output_data == expected_output_;
@@ -24,6 +21,12 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
 
   InType GetTestInputData() final {
     return input_data_;
+  }
+
+ public:
+  TsibarevaERunPerfTestProcesses() {
+    input_data_ = GenerateMatrixFunc(kMatrixRows_, kMatrixCols_, MatrixType::kColumnMaxMiddle);
+    expected_output_ = GenerateExpectedOutput(input_data_);
   }
 };
 

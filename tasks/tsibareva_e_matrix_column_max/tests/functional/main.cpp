@@ -51,46 +51,48 @@ TEST_P(TsibarevaERunFuncTestsProcesses, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 31> kTestParams = {{
-    std::make_tuple(1, 1, MatrixType::kConstant, "single"),
-    std::make_tuple(1, 10, MatrixType::kAscending, "single_row"),
-    std::make_tuple(10, 1, MatrixType::kAscending, "single_col"),
+const std::array<TestType, 33> kTestParams = {
+    {std::make_tuple(1, 1, MatrixType::kConstant, "single"),
+     std::make_tuple(1, 10, MatrixType::kAscending, "single_row"),
+     std::make_tuple(10, 1, MatrixType::kAscending, "single_col"),
 
-    std::make_tuple(5, 5, MatrixType::kAllZeros, "all_zeros"),
-    std::make_tuple(5, 5, MatrixType::kAllNegative, "all_negative"),
-    std::make_tuple(5, 5, MatrixType::kConstant, "constant"),
+     std::make_tuple(5, 5, MatrixType::kAllZeros, "all_zeros"),
+     std::make_tuple(5, 5, MatrixType::kAllNegative, "all_negative"),
+     std::make_tuple(5, 5, MatrixType::kConstant, "constant"),
 
-    std::make_tuple(6, 4, MatrixType::kColumnMaxFirst, "max_first"),
-    std::make_tuple(6, 4, MatrixType::kColumnMaxLast, "max_last"),
-    std::make_tuple(6, 4, MatrixType::kColumnMaxMiddle, "max_middle"),
-    std::make_tuple(6, 4, MatrixType::kDuplicateMaximum, "dup_max"),
+     std::make_tuple(6, 4, MatrixType::kColumnMaxFirst, "max_first"),
+     std::make_tuple(6, 4, MatrixType::kColumnMaxLast, "max_last"),
+     std::make_tuple(6, 4, MatrixType::kColumnMaxMiddle, "max_middle"),
+     std::make_tuple(6, 4, MatrixType::kDuplicateMaximum, "dup_max"),
 
-    std::make_tuple(5, 5, MatrixType::kAscending, "ascending"),
-    std::make_tuple(5, 5, MatrixType::kDescending, "descending"),
-    std::make_tuple(5, 5, MatrixType::kDiagonalDominant, "diagonal"),
-    std::make_tuple(5, 5, MatrixType::kSparse, "sparse"),
-    std::make_tuple(5, 5, MatrixType::kDense, "dense"),
+     std::make_tuple(5, 5, MatrixType::kAscending, "ascending"),
+     std::make_tuple(5, 5, MatrixType::kDescending, "descending"),
+     std::make_tuple(5, 5, MatrixType::kDiagonalDominant, "diagonal"),
+     std::make_tuple(5, 5, MatrixType::kSparse, "sparse"),
+     std::make_tuple(5, 5, MatrixType::kDense, "dense"),
 
-    std::make_tuple(2, 2, MatrixType::kAscending, "square"),
-    std::make_tuple(3, 3, MatrixType::kAscending, "square"),
-    std::make_tuple(7, 7, MatrixType::kAscending, "square"),
-    std::make_tuple(16, 16, MatrixType::kAscending, "square"),
-    std::make_tuple(10, 5, MatrixType::kAscending, "vertical"),
-    std::make_tuple(5, 10, MatrixType::kAscending, "horizontal"),
-    std::make_tuple(100, 2, MatrixType::kAscending, "vertical"),
-    std::make_tuple(2, 100, MatrixType::kAscending, "horizontal"),
+     std::make_tuple(2, 2, MatrixType::kAscending, "square"),
+     std::make_tuple(3, 3, MatrixType::kAscending, "square"),
+     std::make_tuple(7, 7, MatrixType::kAscending, "square"),
+     std::make_tuple(16, 16, MatrixType::kAscending, "square"),
+     std::make_tuple(10, 5, MatrixType::kAscending, "vertical"),
+     std::make_tuple(5, 10, MatrixType::kAscending, "horizontal"),
+     std::make_tuple(100, 2, MatrixType::kAscending, "vertical"),
+     std::make_tuple(2, 100, MatrixType::kAscending, "horizontal"),
 
-    std::make_tuple(4, 4, MatrixType::kCheckerboard, "checkerboard"),
+     std::make_tuple(4, 4, MatrixType::kCheckerboard, "checkerboard"),
 
-    std::make_tuple(5, 5, MatrixType::kLargeValues, "large_values"),
-    std::make_tuple(5, 5, MatrixType::kSmallValues, "small_values"),
-    std::make_tuple(5, 5, MatrixType::kIdenticalColumns, "identical_cols"),
-    std::make_tuple(5, 5, MatrixType::kIdenticalRows, "identical_rows"),
+     std::make_tuple(5, 5, MatrixType::kLargeValues, "large_values"),
+     std::make_tuple(5, 5, MatrixType::kSmallValues, "small_values"),
+     std::make_tuple(5, 5, MatrixType::kIdenticalColumns, "identical_cols"),
+     std::make_tuple(5, 5, MatrixType::kIdenticalRows, "identical_rows"),
 
-    std::make_tuple(8, 6, MatrixType::kFewDenseColumns, "few_dense_cols"),
-    std::make_tuple(8, 6, MatrixType::kSingleColumnPositive, "single_positive_col"),
-    std::make_tuple(6, 4, MatrixType::kSingleColumnPositive, "single_positive_col"),
-}};
+     std::make_tuple(8, 6, MatrixType::kFewDenseColumns, "few_dense_cols"),
+     std::make_tuple(8, 6, MatrixType::kSingleColumnPositive, "single_positive_col"),
+     std::make_tuple(6, 4, MatrixType::kSingleColumnPositive, "single_positive_col"),
+
+     std::make_tuple(5, 5, MatrixType::kNegative, "negative"),
+     std::make_tuple(6, 4, MatrixType::kColumnMaxRandom, "max_random")}};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<TsibarevaEMatrixColumnMaxMPI, InType>(
                                                kTestParams, PPC_SETTINGS_tsibareva_e_matrix_column_max),
@@ -129,6 +131,20 @@ TEST(TsibarevaEMatrixColumnMaxSEQ, ZeroColumnsMatrixShouldFailValidation) {
   TsibarevaEMatrixColumnMaxSEQ task(matrix);
   bool success = task.Validation();
   ASSERT_FALSE(success);
+}
+
+// Специальный тест для покрытия вспомогательной функции CollectResultsFromAllProcesses.
+TEST(TsibarevaEMatrixColumnMaxMPI, NullProcCount) {
+  auto matrix = GenerateMatrixFunc(5, 3, MatrixType::kConstant);
+  TsibarevaEMatrixColumnMaxMPI task(matrix);
+
+  EXPECT_TRUE(task.Validation());
+  EXPECT_TRUE(task.PreProcessing());
+  EXPECT_TRUE(task.Run());
+  EXPECT_TRUE(task.PostProcessing());
+
+  auto result = task.GetOutput();
+  EXPECT_EQ(result.size(), static_cast<size_t>(3));
 }
 
 }  // namespace
