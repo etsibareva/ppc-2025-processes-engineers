@@ -8,7 +8,6 @@
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
 #include "tsibareva_e_matrix_column_max/mpi/include/ops_mpi.hpp"
 #include "tsibareva_e_matrix_column_max/seq/include/ops_seq.hpp"
-#include "tsibareva_e_matrix_column_max/test_data/include/test_data_generator.hpp"
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
 
