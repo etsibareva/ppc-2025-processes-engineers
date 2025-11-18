@@ -1,5 +1,9 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <limits>
+#include <vector>
+
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
 #include "tsibareva_e_matrix_column_max/mpi/include/ops_mpi.hpp"
 #include "tsibareva_e_matrix_column_max/seq/include/ops_seq.hpp"
@@ -8,8 +12,8 @@
 namespace tsibareva_e_matrix_column_max {
 
 class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kMatrixRows_ = 5000;
-  const int kMatrixCols_ = 5000;
+  const int kMatrixRows_ = 10000;
+  const int kMatrixCols_ = 10000;
   InType input_data_;
   OutType expected_output_;
 
@@ -30,9 +34,7 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
 
         input_data_[i][j] = generate_value;
 
-        if (generate_value > expected_output_[j]) {
-          expected_output_[j] = generate_value;
-        }
+        expected_output_[j] = std::max(generate_value, expected_output_[j]);
       }
     }
   }

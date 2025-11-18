@@ -186,11 +186,11 @@ inline std::vector<int> GenerateExpectedOutput(const std::vector<std::vector<int
   std::vector<int> result(matrix[0].size(), 0);
 
   for (size_t j = 0; j < matrix[0].size(); ++j) {
-    int max_val = matrix[0][j];
+    int max_value = matrix[0][j];
     for (size_t i = 1; i < matrix.size(); ++i) {
-      max_val = std::max(matrix[i][j], max_val);
+      max_value = std::max(matrix[i][j], max_value);
     }
-    result[j] = max_val;
+    result[j] = max_value;
   }
   return result;
 }

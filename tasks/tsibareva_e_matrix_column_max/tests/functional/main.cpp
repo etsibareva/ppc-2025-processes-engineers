@@ -51,7 +51,7 @@ TEST_P(TsibarevaERunFuncTestsProcesses, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 16> kTestParams = {{std::make_tuple(1, 1, MatrixType::kConstant, "single"),
+const std::array<TestType, 17> kTestParams = {{std::make_tuple(1, 1, MatrixType::kConstant, "single"),
                                                std::make_tuple(1, 10, MatrixType::kAscending, "single_row"),
                                                std::make_tuple(3, 1, MatrixType::kAscending, "single_col"),
 
@@ -62,15 +62,16 @@ const std::array<TestType, 16> kTestParams = {{std::make_tuple(1, 1, MatrixType:
                                                std::make_tuple(6, 4, MatrixType::kColumnMaxLast, "max_last"),
                                                std::make_tuple(6, 4, MatrixType::kColumnMaxMiddle, "max_middle"),
 
-                                               std::make_tuple(5, 5, MatrixType::kAscending, "ascending_simple"),
-                                               std::make_tuple(5, 5, MatrixType::kDescending, "descending_simple"),
-                                               std::make_tuple(5, 5, MatrixType::kDiagonalDominant, "diagonal_dom"),
-                                               std::make_tuple(5, 5, MatrixType::kSparse, "sparse"),
-                                               std::make_tuple(5, 5, MatrixType::kNegative, "negative"),
+                                               std::make_tuple(8, 8, MatrixType::kAscending, "ascending_simple"),
+                                               std::make_tuple(8, 8, MatrixType::kDescending, "descending_simple"),
+                                               std::make_tuple(8, 8, MatrixType::kDiagonalDominant, "diagonal_dom"),
+                                               std::make_tuple(8, 8, MatrixType::kSparse, "sparse"),
+                                               std::make_tuple(8, 8, MatrixType::kNegative, "negative"),
 
                                                std::make_tuple(2, 2, MatrixType::kAscending, "square_small"),
-                                               std::make_tuple(10, 5, MatrixType::kAscending, "vertical"),
-                                               std::make_tuple(5, 10, MatrixType::kAscending, "horizontal")}};
+                                               std::make_tuple(10, 4, MatrixType::kAscending, "vertical"),
+                                               std::make_tuple(5, 10, MatrixType::kAscending, "horizontal"),
+                                               std::make_tuple(7, 7, MatrixType::kCheckerboard, "checkerboard")}};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<TsibarevaEMatrixColumnMaxMPI, InType>(
                                                kTestParams, PPC_SETTINGS_tsibareva_e_matrix_column_max),
