@@ -49,14 +49,14 @@ bool TsibarevaEMatrixColumnMaxSEQ::RunImpl() {
   }
 
   auto &column_maxs = GetOutput();
-  size_t num_cols = matrix[0].size();
+  size_t cols_count = matrix[0].size();
 
-  for (size_t col = 0; col < num_cols; ++col) {
-    int max_val = matrix[0][col];
+  for (size_t col = 0; col < cols_count; ++col) {
+    int max_value = matrix[0][col];
     for (size_t row = 1; row < matrix.size(); ++row) {
-      max_val = std::max(matrix[row][col], max_val);
+      max_value = std::max(matrix[row][col], max_value);
     }
-    column_maxs[col] = max_val;
+    column_maxs[col] = max_value;
   }
 
   return true;

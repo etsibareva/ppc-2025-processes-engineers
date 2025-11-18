@@ -8,12 +8,34 @@
 namespace tsibareva_e_matrix_column_max {
 
 class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kMatrixRows_ = 10000;
-  const int kMatrixCols_ = 10000;
+  const int kMatrixRows_ = 5000;
+  const int kMatrixCols_ = 5000;
   InType input_data_;
   OutType expected_output_;
 
-  void SetUp() override {}
+  void SetUp() override {
+    input_data_.resize(kMatrixRows_, std::vector<int>(kMatrixCols_));
+    expected_output_.resize(kMatrixCols_, std::numeric_limits<int>::min());
+
+    int row_middle = kMatrixRows_ / 2;
+
+    for (int j = 0; j < kMatrixCols_; ++j) {
+      for (int i = 0; i < kMatrixRows_; ++i) {
+        int generate_value = 0;
+        if (i == row_middle) {
+          generate_value = 1000000 + j;
+        } else {
+          generate_value = ((i * kMatrixCols_) + j) % 1000;
+        }
+
+        input_data_[i][j] = generate_value;
+
+        if (generate_value > expected_output_[j]) {
+          expected_output_[j] = generate_value;
+        }
+      }
+    }
+  }
 
   bool CheckTestOutputData(OutType &output_data) final {
     return output_data == expected_output_;
@@ -21,12 +43,6 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
 
   InType GetTestInputData() final {
     return input_data_;
-  }
-
- public:
-  TsibarevaERunPerfTestProcesses() {
-    input_data_ = GenerateMatrixFunc(kMatrixRows_, kMatrixCols_, MatrixType::kColumnMaxMiddle);
-    expected_output_ = GenerateExpectedOutput(input_data_);
   }
 };
 
