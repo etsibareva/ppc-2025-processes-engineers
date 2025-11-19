@@ -16,20 +16,16 @@ namespace tsibareva_e_matrix_column_max {
 class TsibarevaERunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
-    int rows = std::get<0>(test_param);
-    int cols = std::get<1>(test_param);
-    std::string desc = std::get<3>(test_param);
-    return std::to_string(rows) + "x" + std::to_string(cols) + "_" + desc;
+    std::string description = std::get<1>(test_param);
+    return description;
   }
 
  protected:
   void SetUp() override {
     auto params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    int rows = std::get<0>(params);
-    int cols = std::get<1>(params);
-    MatrixType matrix_type = std::get<2>(params);
-    input_data_ = GenerateMatrixFunc(rows, cols, matrix_type);
-    expected_output_ = GenerateExpectedOutput(input_data_);
+    MatrixType matrix_type = std::get<0>(params);
+    input_data_ = GenerateMatrixFunc(matrix_type);
+    expected_output_ = GenerateExpectedOutput(matrix_type);
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
@@ -51,27 +47,25 @@ TEST_P(TsibarevaERunFuncTestsProcesses, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 17> kTestParams = {{std::make_tuple(1, 1, MatrixType::kConstant, "single"),
-                                               std::make_tuple(1, 10, MatrixType::kAscending, "single_row"),
-                                               std::make_tuple(3, 1, MatrixType::kAscending, "single_col"),
+const std::array<TestType, 17> kTestParams = {
+    {std::make_tuple(MatrixType::kSingleConstant, "1x1_single"),
+     std::make_tuple(MatrixType::kSingleRow, "1x10_single_row"),
+     std::make_tuple(MatrixType::kSingleCol, "3x1_single_col"),
 
-                                               std::make_tuple(5, 5, MatrixType::kAllZeros, "all_zeros"),
-                                               std::make_tuple(5, 5, MatrixType::kConstant, "constant"),
+     std::make_tuple(MatrixType::kAllZeros, "5x5_all_zeros"), std::make_tuple(MatrixType::kConstant, "5x5_constant"),
 
-                                               std::make_tuple(6, 4, MatrixType::kColumnMaxFirst, "max_first"),
-                                               std::make_tuple(6, 4, MatrixType::kColumnMaxLast, "max_last"),
-                                               std::make_tuple(6, 4, MatrixType::kColumnMaxMiddle, "max_middle"),
+     std::make_tuple(MatrixType::kMaxFirst, "6x4_max_first"), std::make_tuple(MatrixType::kMaxLast, "6x4_max_last"),
+     std::make_tuple(MatrixType::kMaxMiddle, "6x4_max_middle"),
 
-                                               std::make_tuple(8, 8, MatrixType::kAscending, "ascending_simple"),
-                                               std::make_tuple(8, 8, MatrixType::kDescending, "descending_simple"),
-                                               std::make_tuple(8, 8, MatrixType::kDiagonalDominant, "diagonal_dom"),
-                                               std::make_tuple(8, 8, MatrixType::kSparse, "sparse"),
-                                               std::make_tuple(8, 8, MatrixType::kNegative, "negative"),
+     std::make_tuple(MatrixType::kAscending, "8x8_ascending_simple"),
+     std::make_tuple(MatrixType::kDescending, "8x8_descending_simple"),
+     std::make_tuple(MatrixType::kDiagonalDominant, "8x8_diagonal_dom"),
+     std::make_tuple(MatrixType::kSparse, "8x8_sparse"), std::make_tuple(MatrixType::kNegative, "8x8_negative"),
 
-                                               std::make_tuple(2, 2, MatrixType::kAscending, "square_small"),
-                                               std::make_tuple(10, 4, MatrixType::kAscending, "vertical"),
-                                               std::make_tuple(5, 10, MatrixType::kAscending, "horizontal"),
-                                               std::make_tuple(7, 7, MatrixType::kCheckerboard, "checkerboard")}};
+     std::make_tuple(MatrixType::kSquareSmall, "2x2_square_small"),
+     std::make_tuple(MatrixType::kVertical, "10x4_vertical"),
+     std::make_tuple(MatrixType::kHorizontal, "5x10_horizontal"),
+     std::make_tuple(MatrixType::kCheckerboard, "7x7_checkerboard")}};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<TsibarevaEMatrixColumnMaxMPI, InType>(
                                                kTestParams, PPC_SETTINGS_tsibareva_e_matrix_column_max),
@@ -85,28 +79,28 @@ const auto kPerfTestName = TsibarevaERunFuncTestsProcesses::PrintFuncTestName<Ts
 INSTANTIATE_TEST_SUITE_P(PicMatrixTests, TsibarevaERunFuncTestsProcesses, kGtestValues, kPerfTestName);
 
 TEST(TsibarevaEMatrixColumnMaxMPI, EmptyMatrixShouldFailValidation) {
-  auto matrix = GenerateMatrixFunc(0, 0, MatrixType::kAscending);
+  auto matrix = std::vector<std::vector<int>>();
   TsibarevaEMatrixColumnMaxMPI test_task(matrix);
   bool success = test_task.Validation();
   ASSERT_FALSE(success);
 }
 
 TEST(TsibarevaEMatrixColumnMaxSEQ, EmptyMatrixShouldFailValidation) {
-  auto matrix = GenerateMatrixFunc(0, 0, MatrixType::kAscending);
+  auto matrix = std::vector<std::vector<int>>();
   TsibarevaEMatrixColumnMaxSEQ test_task(matrix);
   bool success = test_task.Validation();
   ASSERT_FALSE(success);
 }
 
 TEST(TsibarevaEMatrixColumnMaxMPI, ZeroColumnsMatrixShouldFailValidation) {
-  auto matrix = GenerateMatrixFunc(5, 0, MatrixType::kAscending);
+  auto matrix = std::vector<std::vector<int>>(5, std::vector<int>());
   TsibarevaEMatrixColumnMaxMPI test_task(matrix);
   bool success = test_task.Validation();
   ASSERT_FALSE(success);
 }
 
 TEST(TsibarevaEMatrixColumnMaxSEQ, ZeroColumnsMatrixShouldFailValidation) {
-  auto matrix = GenerateMatrixFunc(5, 0, MatrixType::kAscending);
+  auto matrix = std::vector<std::vector<int>>(5, std::vector<int>());
   TsibarevaEMatrixColumnMaxSEQ test_task(matrix);
   bool success = test_task.Validation();
   ASSERT_FALSE(success);
