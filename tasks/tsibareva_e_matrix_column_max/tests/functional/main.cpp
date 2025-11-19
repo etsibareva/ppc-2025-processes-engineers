@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
 #include "tsibareva_e_matrix_column_max/mpi/include/ops_mpi.hpp"
