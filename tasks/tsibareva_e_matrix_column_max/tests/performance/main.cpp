@@ -12,8 +12,8 @@
 namespace tsibareva_e_matrix_column_max {
 
 class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kMatrixRows_ = 6000;
-  const int kMatrixCols_ = 6000;
+  const int kMatrixRows_ = 10000;
+  const int kMatrixCols_ = 10000;
   InType input_data_;
   OutType expected_output_;
 
