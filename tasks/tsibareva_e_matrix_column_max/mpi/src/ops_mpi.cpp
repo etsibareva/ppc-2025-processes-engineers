@@ -38,10 +38,8 @@ bool TsibarevaEMatrixColumnMaxMPI::ValidationImpl() {
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::PreProcessingImpl() {
-  if (!GetInput().empty()) {
-    final_result_ = std::vector<int>(GetInput()[0].size(), 0);
-    GetOutput() = std::vector<int>(GetInput()[0].size(), 0);
-  }
+  final_result_ = std::vector<int>(GetInput()[0].size(), 0);
+  GetOutput() = std::vector<int>(GetInput()[0].size(), 0);
   return true;
 }
 

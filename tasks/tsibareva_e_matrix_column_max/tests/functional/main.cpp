@@ -107,6 +107,20 @@ TEST(TsibarevaEMatrixColumnMaxSEQ, ZeroColumnsMatrixShouldFailValidation) {
   ASSERT_FALSE(success);
 }
 
+TEST(TsibarevaEMatrixColumnMaxMPI, NonRectangularMatrixShouldFailValidation) {
+  auto matrix = std::vector<std::vector<int>>{{1, 2, 3}, {4, 5}, {6, 7, 8}};
+  TsibarevaEMatrixColumnMaxMPI test_task(matrix);
+  bool success = test_task.Validation();
+  ASSERT_FALSE(success);
+}
+
+TEST(TsibarevaEMatrixColumnMaxSEQ, NonRectangularMatrixShouldFailValidation) {
+  auto matrix = std::vector<std::vector<int>>{{1, 2}, {3, 4, 5}};
+  TsibarevaEMatrixColumnMaxSEQ test_task(matrix);
+  bool success = test_task.Validation();
+  ASSERT_FALSE(success);
+}
+
 }  // namespace
 
 }  // namespace tsibareva_e_matrix_column_max

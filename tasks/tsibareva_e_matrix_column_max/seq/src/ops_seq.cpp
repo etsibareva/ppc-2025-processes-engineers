@@ -36,18 +36,12 @@ bool TsibarevaEMatrixColumnMaxSEQ::ValidationImpl() {
 }
 
 bool TsibarevaEMatrixColumnMaxSEQ::PreProcessingImpl() {
-  if (!GetInput().empty()) {
-    GetOutput() = std::vector<int>(GetInput()[0].size(), 0);
-  }
+  GetOutput() = std::vector<int>(GetInput()[0].size(), 0);
   return true;
 }
 
 bool TsibarevaEMatrixColumnMaxSEQ::RunImpl() {
   const auto &matrix = GetInput();
-  if (matrix.empty()) {
-    return false;
-  }
-
   auto &column_maxs = GetOutput();
   size_t cols_count = matrix[0].size();
 
