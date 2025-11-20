@@ -15,32 +15,33 @@ TsibarevaEMatrixColumnMaxSEQ::TsibarevaEMatrixColumnMaxSEQ(const InType &in) {
 }
 
 bool TsibarevaEMatrixColumnMaxSEQ::ValidationImpl() {
+  return true;
+}
+
+bool TsibarevaEMatrixColumnMaxSEQ::PreProcessingImpl() {
   const auto &matrix = GetInput();
-
-  if (matrix.empty()) {
-    return false;
-  }
-
-  if (matrix[0].empty()) {
-    return false;
+  if (matrix.empty() || matrix[0].empty()) {
+    GetOutput() = std::vector<int>();
+    return true;
   }
 
   size_t first_row_size = matrix[0].size();
   for (size_t i = 1; i < matrix.size(); ++i) {
     if (matrix[i].size() != first_row_size) {
-      return false;
+      GetOutput() = std::vector<int>();
+      return true;
     }
   }
 
-  return true;
-}
-
-bool TsibarevaEMatrixColumnMaxSEQ::PreProcessingImpl() {
   GetOutput() = std::vector<int>(GetInput()[0].size(), 0);
   return true;
 }
 
 bool TsibarevaEMatrixColumnMaxSEQ::RunImpl() {
+  if (GetOutput().empty()) {
+    return true;
+  }
+
   const auto &matrix = GetInput();
   auto &column_maxs = GetOutput();
   size_t cols_count = matrix[0].size();

@@ -17,33 +17,37 @@ TsibarevaEMatrixColumnMaxMPI::TsibarevaEMatrixColumnMaxMPI(const InType &in) {
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::ValidationImpl() {
+  return true;
+}
+
+bool TsibarevaEMatrixColumnMaxMPI::PreProcessingImpl() {
   const auto &matrix = GetInput();
 
-  if (matrix.empty()) {
-    return false;
-  }
-
-  if (matrix[0].empty()) {
-    return false;
+  if (matrix.empty() || matrix[0].empty()) {
+    GetOutput() = std::vector<int>();
+    final_result_ = std::vector<int>();
+    return true;
   }
 
   size_t first_row_size = matrix[0].size();
   for (size_t i = 1; i < matrix.size(); ++i) {
     if (matrix[i].size() != first_row_size) {
-      return false;
+      GetOutput() = std::vector<int>();
+      final_result_ = std::vector<int>();
+      return true;
     }
   }
 
-  return true;
-}
-
-bool TsibarevaEMatrixColumnMaxMPI::PreProcessingImpl() {
   final_result_ = std::vector<int>(GetInput()[0].size(), 0);
   GetOutput() = std::vector<int>(GetInput()[0].size(), 0);
   return true;
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
+  if (GetOutput().empty()) {
+    return true;
+  }
+
   int world_rank = 0;
   int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
@@ -108,6 +112,10 @@ void TsibarevaEMatrixColumnMaxMPI::CollectResultsFromAllProcesses(const std::vec
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::PostProcessingImpl() {
+  if (GetOutput().empty()) {
+    return true;
+  }
+
   int world_rank = 0;
   int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);

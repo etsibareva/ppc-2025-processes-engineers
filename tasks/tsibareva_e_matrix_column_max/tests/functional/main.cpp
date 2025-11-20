@@ -79,46 +79,52 @@ const auto kPerfTestName = TsibarevaERunFuncTestsProcesses::PrintFuncTestName<Ts
 
 INSTANTIATE_TEST_SUITE_P(PicMatrixTests, TsibarevaERunFuncTestsProcesses, kGtestValues, kPerfTestName);
 
-TEST(tsibareva_e_matrix_column_max_mpi_, empty_matrix_should_fail_validation) {
+TEST(tsibareva_e_matrix_column_max_mpi_, EmptyMatrixShouldFailValidation) {
   auto matrix = std::vector<std::vector<int>>();
   TsibarevaEMatrixColumnMaxMPI test_task(matrix);
-  bool success = test_task.Validation();
-  EXPECT_FALSE(success);
+  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
+  ASSERT_TRUE(success);
+  EXPECT_TRUE(test_task.GetOutput().empty());
 }
 
-TEST(tsibareva_e_matrix_column_max_seq_, empty_matrix_should_fail_validation) {
+TEST(tsibareva_e_matrix_column_max_seq_, EmptyMatrixShouldFailValidation) {
   auto matrix = std::vector<std::vector<int>>();
   TsibarevaEMatrixColumnMaxSEQ test_task(matrix);
-  bool success = test_task.Validation();
-  EXPECT_FALSE(success);
+  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
+  ASSERT_TRUE(success);
+  EXPECT_TRUE(test_task.GetOutput().empty());
 }
 
-TEST(tsibareva_e_matrix_column_max_mpi_, zero_columns_matrix_should_fail_validation) {
+TEST(tsibareva_e_matrix_column_max_mpi_, EmptyColumnsMatrixShouldFailValidation) {
   auto matrix = std::vector<std::vector<int>>(5, std::vector<int>());
   TsibarevaEMatrixColumnMaxMPI test_task(matrix);
-  bool success = test_task.Validation();
-  EXPECT_FALSE(success);
+  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
+  ASSERT_TRUE(success);
+  EXPECT_TRUE(test_task.GetOutput().empty());
 }
 
-TEST(tsibareva_e_matrix_column_max_seq_, zero_columns_matrix_should_fail_validation) {
+TEST(tsibareva_e_matrix_column_max_seq_, EmptyColumnsMatrixShouldFailValidation) {
   auto matrix = std::vector<std::vector<int>>(5, std::vector<int>());
   TsibarevaEMatrixColumnMaxSEQ test_task(matrix);
-  bool success = test_task.Validation();
-  EXPECT_FALSE(success);
+  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
+  ASSERT_TRUE(success);
+  EXPECT_TRUE(test_task.GetOutput().empty());
 }
 
-TEST(tsibareva_e_matrix_column_max_mpi_, not_rectangular_matrix_should_fail_validation) {
+TEST(tsibareva_e_matrix_column_max_mpi_, NotRectangularMatrixShouldFailValidation) {
   auto matrix = std::vector<std::vector<int>>{{1, 2, 3}, {4, 5}, {6, 7, 8}};
   TsibarevaEMatrixColumnMaxMPI test_task(matrix);
-  bool success = test_task.Validation();
-  EXPECT_FALSE(success);
+  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
+  ASSERT_TRUE(success);
+  EXPECT_TRUE(test_task.GetOutput().empty());
 }
 
-TEST(tsibareva_e_matrix_column_max_seq_, not_rectangular_matrix_should_fail_validation) {
+TEST(tsibareva_e_matrix_column_max_seq_, NotRectangularMatrixShouldFailValidation) {
   auto matrix = std::vector<std::vector<int>>{{1, 2}, {3, 4, 5}};
   TsibarevaEMatrixColumnMaxSEQ test_task(matrix);
-  bool success = test_task.Validation();
-  EXPECT_FALSE(success);
+  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
+  ASSERT_TRUE(success);
+  EXPECT_TRUE(test_task.GetOutput().empty());
 }
 
 }  // namespace
