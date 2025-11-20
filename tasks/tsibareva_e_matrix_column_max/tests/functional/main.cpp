@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <string>
 #include <tuple>
-#include <vector>
 
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
 #include "tsibareva_e_matrix_column_max/mpi/include/ops_mpi.hpp"
@@ -48,25 +47,31 @@ TEST_P(TsibarevaERunFuncTestsProcesses, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 17> kTestParams = {
-    {std::make_tuple(MatrixType::kSingleConstant, "1x1_single"),
-     std::make_tuple(MatrixType::kSingleRow, "1x10_single_row"),
-     std::make_tuple(MatrixType::kSingleCol, "3x1_single_col"),
+const std::array<TestType, 20> kTestParams = {{std::make_tuple(MatrixType::kSingleConstant, "1x1_single"),
+                                               std::make_tuple(MatrixType::kSingleRow, "1x10_single_row"),
+                                               std::make_tuple(MatrixType::kSingleCol, "3x1_single_col"),
 
-     std::make_tuple(MatrixType::kAllZeros, "5x5_all_zeros"), std::make_tuple(MatrixType::kConstant, "5x5_constant"),
+                                               std::make_tuple(MatrixType::kAllZeros, "5x5_all_zeros"),
+                                               std::make_tuple(MatrixType::kConstant, "5x5_constant"),
 
-     std::make_tuple(MatrixType::kMaxFirst, "6x4_max_first"), std::make_tuple(MatrixType::kMaxLast, "6x4_max_last"),
-     std::make_tuple(MatrixType::kMaxMiddle, "6x4_max_middle"),
+                                               std::make_tuple(MatrixType::kMaxFirst, "6x4_max_first"),
+                                               std::make_tuple(MatrixType::kMaxLast, "6x4_max_last"),
+                                               std::make_tuple(MatrixType::kMaxMiddle, "6x4_max_middle"),
 
-     std::make_tuple(MatrixType::kAscending, "8x8_ascending_simple"),
-     std::make_tuple(MatrixType::kDescending, "8x8_descending_simple"),
-     std::make_tuple(MatrixType::kDiagonalDominant, "8x8_diagonal_dom"),
-     std::make_tuple(MatrixType::kSparse, "8x8_sparse"), std::make_tuple(MatrixType::kNegative, "8x8_negative"),
+                                               std::make_tuple(MatrixType::kAscending, "8x8_ascending_simple"),
+                                               std::make_tuple(MatrixType::kDescending, "8x8_descending_simple"),
+                                               std::make_tuple(MatrixType::kDiagonalDominant, "8x8_diagonal_dom"),
+                                               std::make_tuple(MatrixType::kSparse, "8x8_sparse"),
+                                               std::make_tuple(MatrixType::kNegative, "8x8_negative"),
 
-     std::make_tuple(MatrixType::kSquareSmall, "2x2_square_small"),
-     std::make_tuple(MatrixType::kVertical, "10x4_vertical"),
-     std::make_tuple(MatrixType::kHorizontal, "5x10_horizontal"),
-     std::make_tuple(MatrixType::kCheckerboard, "7x7_checkerboard")}};
+                                               std::make_tuple(MatrixType::kSquareSmall, "2x2_square_small"),
+                                               std::make_tuple(MatrixType::kVertical, "10x4_vertical"),
+                                               std::make_tuple(MatrixType::kHorizontal, "5x10_horizontal"),
+                                               std::make_tuple(MatrixType::kCheckerboard, "7x7_checkerboard"),
+
+                                               std::make_tuple(MatrixType::kEmpty, "empty_matrix"),
+                                               std::make_tuple(MatrixType::kZeroColumns, "zero_columns_matrix"),
+                                               std::make_tuple(MatrixType::kNonRectangular, "non_rectangular_matrix")}};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<TsibarevaEMatrixColumnMaxMPI, InType>(
                                                kTestParams, PPC_SETTINGS_tsibareva_e_matrix_column_max),
@@ -78,54 +83,6 @@ const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 const auto kPerfTestName = TsibarevaERunFuncTestsProcesses::PrintFuncTestName<TsibarevaERunFuncTestsProcesses>;
 
 INSTANTIATE_TEST_SUITE_P(PicMatrixTests, TsibarevaERunFuncTestsProcesses, kGtestValues, kPerfTestName);
-
-TEST(tsibareva_e_matrix_column_max_mpi_, EmptyMatrixShouldFailValidation) {
-  auto matrix = std::vector<std::vector<int>>();
-  TsibarevaEMatrixColumnMaxMPI test_task(matrix);
-  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
-  ASSERT_TRUE(success);
-  EXPECT_TRUE(test_task.GetOutput().empty());
-}
-
-TEST(tsibareva_e_matrix_column_max_seq_, EmptyMatrixShouldFailValidation) {
-  auto matrix = std::vector<std::vector<int>>();
-  TsibarevaEMatrixColumnMaxSEQ test_task(matrix);
-  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
-  ASSERT_TRUE(success);
-  EXPECT_TRUE(test_task.GetOutput().empty());
-}
-
-TEST(tsibareva_e_matrix_column_max_mpi_, EmptyColumnsMatrixShouldFailValidation) {
-  auto matrix = std::vector<std::vector<int>>(5, std::vector<int>());
-  TsibarevaEMatrixColumnMaxMPI test_task(matrix);
-  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
-  ASSERT_TRUE(success);
-  EXPECT_TRUE(test_task.GetOutput().empty());
-}
-
-TEST(tsibareva_e_matrix_column_max_seq_, EmptyColumnsMatrixShouldFailValidation) {
-  auto matrix = std::vector<std::vector<int>>(5, std::vector<int>());
-  TsibarevaEMatrixColumnMaxSEQ test_task(matrix);
-  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
-  ASSERT_TRUE(success);
-  EXPECT_TRUE(test_task.GetOutput().empty());
-}
-
-TEST(tsibareva_e_matrix_column_max_mpi_, NotRectangularMatrixShouldFailValidation) {
-  auto matrix = std::vector<std::vector<int>>{{1, 2, 3}, {4, 5}, {6, 7, 8}};
-  TsibarevaEMatrixColumnMaxMPI test_task(matrix);
-  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
-  ASSERT_TRUE(success);
-  EXPECT_TRUE(test_task.GetOutput().empty());
-}
-
-TEST(tsibareva_e_matrix_column_max_seq_, NotRectangularMatrixShouldFailValidation) {
-  auto matrix = std::vector<std::vector<int>>{{1, 2}, {3, 4, 5}};
-  TsibarevaEMatrixColumnMaxSEQ test_task(matrix);
-  bool success = test_task.Validation() && test_task.PreProcessing() && test_task.Run() && test_task.PostProcessing();
-  ASSERT_TRUE(success);
-  EXPECT_TRUE(test_task.GetOutput().empty());
-}
 
 }  // namespace
 

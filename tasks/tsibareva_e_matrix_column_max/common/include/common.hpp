@@ -26,7 +26,10 @@ enum class MatrixType : std::uint8_t {
   kSquareSmall,       // 2x2 маленькая квадратная
   kVertical,          // 10x4 вертикальная
   kHorizontal,        // 5x10 горизонтальная
-  kCheckerboard       // 7x7 шахматная
+  kCheckerboard,      // 7x7 шахматная
+  kEmpty,             // Пустая матрица
+  kZeroColumns,       // Матрица с нулевыми столбцами
+  kNonRectangular     // Непрямоугольная матрица
 };
 
 using InType = std::vector<std::vector<int>>;
@@ -169,6 +172,19 @@ inline std::vector<int> GenerateCheckerboardExpected() {
   return {1, 1, 1, 1, 1, 1, 1};
 }
 
+inline std::vector<std::vector<int>> GenerateEmptyMatrix() {
+  return {};
+}
+inline std::vector<std::vector<int>> GenerateZeroColumnsMatrix() {
+  return std::vector<std::vector<int>>(5, std::vector<int>());
+}
+inline std::vector<std::vector<int>> GenerateNonRectangularMatrix() {
+  return {{1, 2, 3}, {4, 5}, {6, 7, 8}};
+}
+inline std::vector<int> GenerateEmptyExpected() {
+  return {};
+}
+
 inline std::vector<std::vector<int>> GenerateMatrixFunc(MatrixType type) {
   switch (type) {
     case MatrixType::kSingleConstant:
@@ -205,6 +221,12 @@ inline std::vector<std::vector<int>> GenerateMatrixFunc(MatrixType type) {
       return GenerateHorizontalMatrix();
     case MatrixType::kCheckerboard:
       return GenerateCheckerboardMatrix();
+    case MatrixType::kEmpty:
+      return GenerateEmptyMatrix();
+    case MatrixType::kZeroColumns:
+      return GenerateZeroColumnsMatrix();
+    case MatrixType::kNonRectangular:
+      return GenerateNonRectangularMatrix();
   }
   return GenerateSingleConstantMatrix();
 }
@@ -245,6 +267,10 @@ inline std::vector<int> GenerateExpectedOutput(MatrixType type) {
       return GenerateHorizontalExpected();
     case MatrixType::kCheckerboard:
       return GenerateCheckerboardExpected();
+    case MatrixType::kEmpty:
+    case MatrixType::kZeroColumns:
+    case MatrixType::kNonRectangular:
+      return GenerateEmptyExpected();
   }
   return GenerateSingleConstantExpected();
 }
