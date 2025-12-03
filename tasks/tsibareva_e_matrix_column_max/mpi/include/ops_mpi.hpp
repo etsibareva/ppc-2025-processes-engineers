@@ -26,7 +26,6 @@ class TsibarevaEMatrixColumnMaxMPI : public BaseTask {
                                 std::vector<int> &displacements) const;
   void ScatterMatrixData(int world_rank, const std::vector<int> &send_counts, const std::vector<int> &displacements);
   std::vector<int> CalculateLocalColumnMaxima();
-  std::vector<int> GatherGlobalResults(int world_size, const std::vector<int> &local_maxs) const;
 
   std::vector<int> flat_input_;
   std::vector<int> local_flat_data_;

@@ -52,14 +52,31 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
 
   CalculateLocalColumns(world_rank, world_size);
 
-  std::vector<int> send_counts, displacements;
+  std::vector<int> send_counts;
+  std::vector<int> displacements;
   PrepareScatterParameters(world_rank, world_size, send_counts, displacements);
 
   ScatterMatrixData(world_rank, send_counts, displacements);
 
   std::vector<int> local_maxs = CalculateLocalColumnMaxima();
 
-  std::vector<int> global_result = GatherGlobalResults(world_size, local_maxs);
+  int base_cols = cols_ / world_size;
+  int remainder = cols_ % world_size;
+
+  std::vector<int> recv_counts(world_size);
+  std::vector<int> displs(world_size);
+  std::vector<int> global_result(cols_);
+
+  int total_displ = 0;
+  for (int i = 0; i < world_size; i++) {
+    int proc_cols = base_cols + (i < remainder ? 1 : 0);
+    recv_counts[i] = proc_cols;
+    displs[i] = total_displ;
+    total_displ += proc_cols;
+  }
+
+  MPI_Allgatherv(local_maxs.data(), local_cols_, MPI_INT, global_result.data(), recv_counts.data(), displs.data(),
+                 MPI_INT, MPI_COMM_WORLD);
 
   GetOutput() = global_result;
   return true;
@@ -117,29 +134,6 @@ std::vector<int> TsibarevaEMatrixColumnMaxMPI::CalculateLocalColumnMaxima() {
   }
 
   return local_maxs;
-}
-
-std::vector<int> TsibarevaEMatrixColumnMaxMPI::GatherGlobalResults(int world_size,
-                                                                   const std::vector<int> &local_maxs) const {
-  int base_cols = cols_ / world_size;
-  int remainder = cols_ % world_size;
-
-  std::vector<int> recv_counts(world_size);
-  std::vector<int> displs(world_size);
-  std::vector<int> global_result(cols_);
-
-  int total_displ = 0;
-  for (int i = 0; i < world_size; i++) {
-    int proc_cols = base_cols + (i < remainder ? 1 : 0);
-    recv_counts[i] = proc_cols;
-    displs[i] = total_displ;
-    total_displ += proc_cols;
-  }
-
-  MPI_Allgatherv(local_maxs.data(), local_cols_, MPI_INT, global_result.data(), recv_counts.data(), displs.data(),
-                 MPI_INT, MPI_COMM_WORLD);
-
-  return global_result;
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::PostProcessingImpl() {
