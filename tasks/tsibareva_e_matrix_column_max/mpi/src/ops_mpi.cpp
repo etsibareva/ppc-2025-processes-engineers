@@ -3,7 +3,6 @@
 #include <mpi.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <limits>
 #include <vector>
 
@@ -14,7 +13,7 @@ namespace tsibareva_e_matrix_column_max {
 TsibarevaEMatrixColumnMaxMPI::TsibarevaEMatrixColumnMaxMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
 
-  int world_rank;
+  int world_rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
   if (world_rank == 0) {
@@ -38,30 +37,54 @@ bool TsibarevaEMatrixColumnMaxMPI::PreProcessingImpl() {
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
-  // Подготовка начальных значений, начальные проверки.
-  int world_rank = 0;
-  int world_size = 0;
+  int world_rank, world_size;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  MPI_Bcast(&rows_, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  MPI_Bcast(&cols_, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  BroadcastMatrixDimensions();
 
   if (rows_ == 0 || cols_ == 0) {
     GetOutput() = std::vector<int>();
     return true;
   }
 
-  // Расчет количества столбцов на процесс (локально).
+  CalculateLocalColumns(world_rank, world_size);
+
+  std::vector<int> send_counts, displacements;
+  PrepareScatterParameters(world_rank, world_size, send_counts, displacements);
+
+  ScatterMatrixData(world_rank, send_counts, displacements);
+
+  std::vector<int> local_maxs = CalculateLocalColumnMaxima();
+
+  std::vector<int> global_result = GatherGlobalResults(world_size, local_maxs);
+
+  GetOutput() = global_result;
+  return true;
+}
+
+void TsibarevaEMatrixColumnMaxMPI::BroadcastMatrixDimensions() {
+  MPI_Bcast(&rows_, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&cols_, 1, MPI_INT, 0, MPI_COMM_WORLD);
+}
+
+void TsibarevaEMatrixColumnMaxMPI::CalculateLocalColumns(int world_rank, int world_size) {
   int base_cols = cols_ / world_size;
   int remainder = cols_ % world_size;
   local_cols_ = base_cols + (world_rank < remainder ? 1 : 0);
+}
 
-  // Расчет смещений (на процессе 0 с рассылкой).
-  std::vector<int> send_counts(world_size);
-  std::vector<int> displacements(world_size);
+void TsibarevaEMatrixColumnMaxMPI::PrepareScatterParameters(int world_rank, int world_size,
+                                                            std::vector<int> &send_counts,
+                                                            std::vector<int> &displacements) {
+  send_counts.resize(world_size);
+  displacements.resize(world_size);
+
   if (world_rank == 0) {
+    int base_cols = cols_ / world_size;
+    int remainder = cols_ % world_size;
     int displ = 0;
+
     for (int i = 0; i < world_size; i++) {
       int proc_cols = base_cols + (i < remainder ? 1 : 0);
       send_counts[i] = proc_cols * rows_;
@@ -69,27 +92,39 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
       displ += send_counts[i];
     }
   }
+
   MPI_Bcast(send_counts.data(), world_size, MPI_INT, 0, MPI_COMM_WORLD);
   MPI_Bcast(displacements.data(), world_size, MPI_INT, 0, MPI_COMM_WORLD);
+}
 
-  // Рассылка входных данных (с процесса 0).
-  local_flat_data_.resize(local_cols_ * rows_);
+void TsibarevaEMatrixColumnMaxMPI::ScatterMatrixData(int world_rank, const std::vector<int> &send_counts,
+                                                     const std::vector<int> &displacements) {
+  local_flat_data_.resize(static_cast<size_t>(local_cols_) * rows_);
   MPI_Scatterv(world_rank == 0 ? flat_input_.data() : nullptr, send_counts.data(), displacements.data(), MPI_INT,
                local_flat_data_.data(), static_cast<int>(local_flat_data_.size()), MPI_INT, 0, MPI_COMM_WORLD);
+}
 
-  // Подсчет максимумов (локально).
+std::vector<int> TsibarevaEMatrixColumnMaxMPI::CalculateLocalColumnMaxima() {
   std::vector<int> local_maxs(local_cols_, std::numeric_limits<int>::min());
+
   for (int col = 0; col < local_cols_; col++) {
     for (int row = 0; row < rows_; row++) {
-      int idx = col * rows_ + row;
+      int idx = (col * rows_) + row;
       local_maxs[col] = std::max(local_flat_data_[idx], local_maxs[col]);
     }
   }
 
-  // Подготовка буфера приёма и смещений в нём (на каждом процессе, с целью синхронизации результатов GetOutput).
+  return local_maxs;
+}
+
+std::vector<int> TsibarevaEMatrixColumnMaxMPI::GatherGlobalResults(int world_size, const std::vector<int> &local_maxs) {
+  int base_cols = cols_ / world_size;
+  int remainder = cols_ % world_size;
+
   std::vector<int> recv_counts(world_size);
   std::vector<int> displs(world_size);
   std::vector<int> global_result(cols_);
+
   int total_displ = 0;
   for (int i = 0; i < world_size; i++) {
     int proc_cols = base_cols + (i < remainder ? 1 : 0);
@@ -98,13 +133,10 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
     total_displ += proc_cols;
   }
 
-  // Сбор и синхронизация результатов.
   MPI_Allgatherv(local_maxs.data(), local_cols_, MPI_INT, global_result.data(), recv_counts.data(), displs.data(),
                  MPI_INT, MPI_COMM_WORLD);
 
-  GetOutput() = global_result;
-
-  return true;
+  return global_result;
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::PostProcessingImpl() {

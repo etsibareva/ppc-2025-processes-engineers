@@ -237,6 +237,8 @@ inline std::tuple<std::vector<int>, int, int> GenerateMatrixFunc(MatrixType type
       return GenerateEmptyMatrix();
     case MatrixType::kZeroColumns:
       return GenerateZeroColumnsMatrix();
+    default:
+      return GenerateSingleConstantMatrix();
   }
   return GenerateSingleConstantMatrix();
 }
@@ -280,6 +282,8 @@ inline std::vector<int> GenerateExpectedOutput(MatrixType type) {
     case MatrixType::kEmpty:
     case MatrixType::kZeroColumns:
       return GenerateEmptyExpected();
+    default:
+      return GenerateSingleConstantExpected();
   }
   return GenerateSingleConstantExpected();
 }

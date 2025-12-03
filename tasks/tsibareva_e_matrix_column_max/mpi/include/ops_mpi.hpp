@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <vector>
 
 #include "task/include/task.hpp"
@@ -21,7 +20,13 @@ class TsibarevaEMatrixColumnMaxMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  void DistributeData();
+  void BroadcastMatrixDimensions();
+  void CalculateLocalColumns(int world_rank, int world_size);
+  void PrepareScatterParameters(int world_rank, int world_size, std::vector<int> &send_counts,
+                                std::vector<int> &displacements);
+  void ScatterMatrixData(int world_rank, const std::vector<int> &send_counts, const std::vector<int> &displacements);
+  std::vector<int> CalculateLocalColumnMaxima();
+  std::vector<int> GatherGlobalResults(int world_size, const std::vector<int> &local_maxs);
 
   std::vector<int> flat_input_;
   std::vector<int> local_flat_data_;

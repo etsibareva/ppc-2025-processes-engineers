@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <tuple>
 #include <vector>
 
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
@@ -18,7 +19,7 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
   OutType expected_output_;
 
   void SetUp() override {
-    std::vector<int> flat_matrix(kMatrixRows_ * kMatrixCols_);
+    std::vector<int> flat_matrix(static_cast<size_t>(kMatrixRows_) * kMatrixCols_);
     expected_output_.resize(kMatrixCols_, std::numeric_limits<int>::min());
 
     int row_middle = kMatrixRows_ / 2;
@@ -31,7 +32,7 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
           generate_value = ((row * kMatrixCols_) + col) % 1000;
         }
 
-        int idx = col * kMatrixRows_ + row;
+        int idx = (col * kMatrixRows_) + row;
         flat_matrix[idx] = generate_value;
 
         expected_output_[col] = std::max(generate_value, expected_output_[col]);

@@ -1,7 +1,6 @@
 #include "tsibareva_e_matrix_column_max/seq/include/ops_seq.hpp"
 
 #include <algorithm>
-#include <cstddef>
 #include <vector>
 
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
@@ -44,14 +43,11 @@ bool TsibarevaEMatrixColumnMaxSEQ::RunImpl() {
   auto &column_maxs = GetOutput();
 
   for (int col = 0; col < cols_; ++col) {
-    int max_value = flat_input_[col * rows_];
+    int max_value = flat_input_[static_cast<size_t>(col) * rows_];
     for (int row = 1; row < rows_; ++row) {
-      int idx = col * rows_ + row;
+      int idx = (col * rows_) + row;
       int element = flat_input_[idx];
-
-      if (element > max_value) {
-        max_value = element;
-      }
+      max_value = std::max(element, max_value);
     }
     column_maxs[col] = max_value;
   }

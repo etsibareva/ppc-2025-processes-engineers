@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "task/include/task.hpp"
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
 
