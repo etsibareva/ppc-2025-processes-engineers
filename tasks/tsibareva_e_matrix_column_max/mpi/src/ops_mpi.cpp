@@ -57,14 +57,6 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
   int remainder = cols_ % world_size;
   local_cols_ = base_cols + (world_rank < remainder ? 1 : 0);
 
-  int start_col = 0;
-  int current_displ = 0;
-  for (int i = 0; i < world_rank; i++) {
-    int proc_cols = base_cols + (i < remainder ? 1 : 0);
-    start_col += proc_cols;
-    current_displ += proc_cols * rows_;
-  }
-
   // Расчет смещений (на процессе 0 с рассылкой).
   std::vector<int> send_counts(world_size);
   std::vector<int> displacements(world_size);
