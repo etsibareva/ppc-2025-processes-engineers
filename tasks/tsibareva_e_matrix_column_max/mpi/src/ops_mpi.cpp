@@ -3,6 +3,7 @@
 #include <mpi.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <limits>
 #include <vector>
 
@@ -37,7 +38,8 @@ bool TsibarevaEMatrixColumnMaxMPI::PreProcessingImpl() {
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
-  int world_rank, world_size;
+  int world_rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
@@ -76,7 +78,7 @@ void TsibarevaEMatrixColumnMaxMPI::CalculateLocalColumns(int world_rank, int wor
 
 void TsibarevaEMatrixColumnMaxMPI::PrepareScatterParameters(int world_rank, int world_size,
                                                             std::vector<int> &send_counts,
-                                                            std::vector<int> &displacements) {
+                                                            std::vector<int> &displacements) const {
   send_counts.resize(world_size);
   displacements.resize(world_size);
 
@@ -117,7 +119,8 @@ std::vector<int> TsibarevaEMatrixColumnMaxMPI::CalculateLocalColumnMaxima() {
   return local_maxs;
 }
 
-std::vector<int> TsibarevaEMatrixColumnMaxMPI::GatherGlobalResults(int world_size, const std::vector<int> &local_maxs) {
+std::vector<int> TsibarevaEMatrixColumnMaxMPI::GatherGlobalResults(int world_size,
+                                                                   const std::vector<int> &local_maxs) const {
   int base_cols = cols_ / world_size;
   int remainder = cols_ % world_size;
 

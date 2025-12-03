@@ -1,6 +1,7 @@
 #include "tsibareva_e_matrix_column_max/seq/include/ops_seq.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
