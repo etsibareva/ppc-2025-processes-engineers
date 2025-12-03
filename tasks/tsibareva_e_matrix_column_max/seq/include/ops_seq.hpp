@@ -13,6 +13,10 @@ class TsibarevaEMatrixColumnMaxSEQ : public BaseTask {
   explicit TsibarevaEMatrixColumnMaxSEQ(const InType &in);
 
  private:
+  std::vector<int> flat_input_;
+  int rows_ = 0;
+  int cols_ = 0;
+
   bool ValidationImpl() override;
   bool PreProcessingImpl() override;
   bool RunImpl() override;

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <vector>
 
 #include "tsibareva_e_matrix_column_max/common/include/common.hpp"
@@ -12,7 +13,19 @@ namespace tsibareva_e_matrix_column_max {
 
 TsibarevaEMatrixColumnMaxMPI::TsibarevaEMatrixColumnMaxMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
-  GetInput() = std::vector<std::vector<int>>(in);
+
+  int world_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+  if (world_rank == 0) {
+    flat_input_ = std::get<0>(in);
+    rows_ = std::get<1>(in);
+    cols_ = std::get<2>(in);
+  } else {
+    flat_input_ = std::vector<int>();
+    rows_ = -1;
+    cols_ = -1;
+  }
   GetOutput() = std::vector<int>();
 }
 
@@ -21,117 +34,88 @@ bool TsibarevaEMatrixColumnMaxMPI::ValidationImpl() {
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::PreProcessingImpl() {
-  const auto &matrix = GetInput();
-
-  if (matrix.empty() || matrix[0].empty()) {
-    GetOutput() = std::vector<int>();
-    final_result_ = std::vector<int>();
-    return true;
-  }
-
-  size_t first_row_size = matrix[0].size();
-  for (size_t i = 1; i < matrix.size(); ++i) {
-    if (matrix[i].size() != first_row_size) {
-      GetOutput() = std::vector<int>();
-      final_result_ = std::vector<int>();
-      return true;
-    }
-  }
-
-  final_result_ = std::vector<int>(GetInput()[0].size(), 0);
-  GetOutput() = std::vector<int>(GetInput()[0].size(), 0);
   return true;
 }
 
 bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
-  if (GetOutput().empty()) {
-    return true;
-  }
-
+  // Подготовка начальных значений, начальные проверки.
   int world_rank = 0;
   int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  const auto &matrix = GetInput();
-  size_t rows_count = matrix.size();
-  size_t cols_count = matrix[0].size();
+  MPI_Bcast(&rows_, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&cols_, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  std::vector<int> local_maxs;
-
-  for (auto col = static_cast<size_t>(world_rank); col < cols_count; col += static_cast<size_t>(world_size)) {
-    int max_val = matrix[0][col];
-    for (size_t row = 1; row < rows_count; ++row) {
-      max_val = std::max(matrix[row][col], max_val);
-    }
-    local_maxs.push_back(max_val);
+  if (rows_ == 0 || cols_ == 0) {
+    GetOutput() = std::vector<int>();
+    return true;
   }
 
+  // Расчет количества столбцов на процесс (локально).
+  int base_cols = cols_ / world_size;
+  int remainder = cols_ % world_size;
+  local_cols_ = base_cols + (world_rank < remainder ? 1 : 0);
+
+  int start_col = 0;
+  int current_displ = 0;
+  for (int i = 0; i < world_rank; i++) {
+    int proc_cols = base_cols + (i < remainder ? 1 : 0);
+    start_col += proc_cols;
+    current_displ += proc_cols * rows_;
+  }
+
+  // Расчет смещений (на процессе 0 с рассылкой).
+  std::vector<int> send_counts(world_size);
+  std::vector<int> displacements(world_size);
   if (world_rank == 0) {
-    CollectResultsFromAllProcesses(local_maxs, world_size, cols_count);
-  } else {
-    if (!local_maxs.empty()) {
-      MPI_Send(local_maxs.data(), static_cast<int>(local_maxs.size()), MPI_INT, 0, 0, MPI_COMM_WORLD);
+    int displ = 0;
+    for (int i = 0; i < world_size; i++) {
+      int proc_cols = base_cols + (i < remainder ? 1 : 0);
+      send_counts[i] = proc_cols * rows_;
+      displacements[i] = displ;
+      displ += send_counts[i];
     }
   }
+  MPI_Bcast(send_counts.data(), world_size, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(displacements.data(), world_size, MPI_INT, 0, MPI_COMM_WORLD);
+
+  // Рассылка входных данных (с процесса 0).
+  local_flat_data_.resize(local_cols_ * rows_);
+  MPI_Scatterv(world_rank == 0 ? flat_input_.data() : nullptr, send_counts.data(), displacements.data(), MPI_INT,
+               local_flat_data_.data(), static_cast<int>(local_flat_data_.size()), MPI_INT, 0, MPI_COMM_WORLD);
+
+  // Подсчет максимумов (локально).
+  std::vector<int> local_maxs(local_cols_, std::numeric_limits<int>::min());
+  for (int col = 0; col < local_cols_; col++) {
+    for (int row = 0; row < rows_; row++) {
+      int idx = col * rows_ + row;
+      local_maxs[col] = std::max(local_flat_data_[idx], local_maxs[col]);
+    }
+  }
+
+  // Подготовка буфера приёма и смещений в нём (на каждом процессе, с целью синхронизации результатов GetOutput).
+  std::vector<int> recv_counts(world_size);
+  std::vector<int> displs(world_size);
+  std::vector<int> global_result(cols_);
+  int total_displ = 0;
+  for (int i = 0; i < world_size; i++) {
+    int proc_cols = base_cols + (i < remainder ? 1 : 0);
+    recv_counts[i] = proc_cols;
+    displs[i] = total_displ;
+    total_displ += proc_cols;
+  }
+
+  // Сбор и синхронизация результатов.
+  MPI_Allgatherv(local_maxs.data(), local_cols_, MPI_INT, global_result.data(), recv_counts.data(), displs.data(),
+                 MPI_INT, MPI_COMM_WORLD);
+
+  GetOutput() = global_result;
 
   return true;
 }
 
-void TsibarevaEMatrixColumnMaxMPI::CollectResultsFromAllProcesses(const std::vector<int> &local_maxs, int world_size,
-                                                                  size_t cols_count) {
-  final_result_.resize(cols_count);
-
-  int world_rank = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
-  size_t idx = 0;
-  for (size_t col = 0; col < cols_count && idx < local_maxs.size(); col += world_size) {
-    final_result_[col] = local_maxs[idx++];
-  }
-
-  for (int proc = 1; proc < world_size; proc++) {
-    int proc_pass = 0;
-
-    for (size_t col = proc; col < cols_count; col += world_size) {
-      proc_pass++;
-    }
-
-    if (proc_pass <= 0) {
-      continue;
-    }
-
-    std::vector<int> proc_maxs(static_cast<size_t>(proc_pass));
-    MPI_Recv(proc_maxs.data(), proc_pass, MPI_INT, proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-    size_t proc_idx = 0;
-    for (size_t col = proc; col < cols_count; col += world_size) {
-      final_result_[col] = proc_maxs[proc_idx++];
-    }
-  }
-}
-
 bool TsibarevaEMatrixColumnMaxMPI::PostProcessingImpl() {
-  if (GetOutput().empty()) {
-    return true;
-  }
-
-  int world_rank = 0;
-  int world_size = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-
-  const auto &matrix = GetInput();
-  size_t cols_count = matrix[0].size();
-
-  if (world_rank == 0) {
-    GetOutput() = final_result_;
-  } else {
-    GetOutput().resize(cols_count);
-  }
-
-  MPI_Bcast(GetOutput().data(), static_cast<int>(cols_count), MPI_INT, 0, MPI_COMM_WORLD);
-
   return true;
 }
 

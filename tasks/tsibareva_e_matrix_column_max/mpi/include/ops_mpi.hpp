@@ -21,9 +21,13 @@ class TsibarevaEMatrixColumnMaxMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  void CollectResultsFromAllProcesses(const std::vector<int> &local_maxs, int world_size, size_t cols_count);
+  void DistributeData();
 
-  std::vector<int> final_result_;
+  std::vector<int> flat_input_;
+  std::vector<int> local_flat_data_;
+  int rows_ = 0;
+  int cols_ = 0;
+  int local_cols_ = 0;
 };
 
 }  // namespace tsibareva_e_matrix_column_max

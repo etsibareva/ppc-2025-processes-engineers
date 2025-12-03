@@ -12,31 +12,33 @@
 namespace tsibareva_e_matrix_column_max {
 
 class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kMatrixRows_ = 10000;
-  const int kMatrixCols_ = 10000;
+  const int kMatrixRows_ = 20000;
+  const int kMatrixCols_ = 20000;
   InType input_data_;
   OutType expected_output_;
 
   void SetUp() override {
-    input_data_.resize(kMatrixRows_, std::vector<int>(kMatrixCols_));
+    std::vector<int> flat_matrix(kMatrixRows_ * kMatrixCols_);
     expected_output_.resize(kMatrixCols_, std::numeric_limits<int>::min());
 
     int row_middle = kMatrixRows_ / 2;
-
-    for (int j = 0; j < kMatrixCols_; ++j) {
-      for (int i = 0; i < kMatrixRows_; ++i) {
+    for (int col = 0; col < kMatrixCols_; ++col) {
+      for (int row = 0; row < kMatrixRows_; ++row) {
         int generate_value = 0;
-        if (i == row_middle) {
-          generate_value = 1000000 + j;
+        if (row == row_middle) {
+          generate_value = 1000000 + col;
         } else {
-          generate_value = ((i * kMatrixCols_) + j) % 1000;
+          generate_value = ((row * kMatrixCols_) + col) % 1000;
         }
 
-        input_data_[i][j] = generate_value;
+        int idx = col * kMatrixRows_ + row;
+        flat_matrix[idx] = generate_value;
 
-        expected_output_[j] = std::max(generate_value, expected_output_[j]);
+        expected_output_[col] = std::max(generate_value, expected_output_[col]);
       }
     }
+
+    input_data_ = std::make_tuple(flat_matrix, kMatrixRows_, kMatrixCols_);
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
