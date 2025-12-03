@@ -240,7 +240,6 @@ inline std::tuple<std::vector<int>, int, int> GenerateMatrixFunc(MatrixType type
     default:
       return GenerateSingleConstantMatrix();
   }
-  return GenerateSingleConstantMatrix();
 }
 
 inline std::vector<int> GenerateExpectedOutput(MatrixType type) {
@@ -285,7 +284,6 @@ inline std::vector<int> GenerateExpectedOutput(MatrixType type) {
     default:
       return GenerateSingleConstantExpected();
   }
-  return GenerateSingleConstantExpected();
 }
 
 }  // namespace tsibareva_e_matrix_column_max
