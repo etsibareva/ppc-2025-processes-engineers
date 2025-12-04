@@ -15,7 +15,7 @@ TsibarevaEMatrixColumnMaxSEQ::TsibarevaEMatrixColumnMaxSEQ(const InType &in) {
   int rows = std::get<1>(in);
   int cols = std::get<2>(in);
 
-  flat_input_ = flat_matrix;
+  input_matrix_ = flat_matrix;
   rows_ = rows;
   cols_ = cols;
 
@@ -44,13 +44,13 @@ bool TsibarevaEMatrixColumnMaxSEQ::RunImpl() {
   auto &column_maxs = GetOutput();
 
   for (int col = 0; col < cols_; ++col) {
-    int max_value = flat_input_[static_cast<size_t>(col) * rows_];
+    int maxum_value = input_matrix_[static_cast<size_t>(col) * rows_];
     for (int row = 1; row < rows_; ++row) {
       int idx = (col * rows_) + row;
-      int element = flat_input_[idx];
-      max_value = std::max(element, max_value);
+      int element = input_matrix_[idx];
+      maxum_value = std::max(element, maxum_value);
     }
-    column_maxs[col] = max_value;
+    column_maxs[col] = maxum_value;
   }
 
   return true;

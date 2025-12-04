@@ -15,7 +15,7 @@ class TsibarevaEMatrixColumnMaxSEQ : public BaseTask {
   explicit TsibarevaEMatrixColumnMaxSEQ(const InType &in);
 
  private:
-  std::vector<int> flat_input_;
+  std::vector<int> input_matrix_;
   int rows_ = 0;
   int cols_ = 0;
 

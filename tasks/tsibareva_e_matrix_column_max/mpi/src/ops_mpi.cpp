@@ -18,11 +18,11 @@ TsibarevaEMatrixColumnMaxMPI::TsibarevaEMatrixColumnMaxMPI(const InType &in) {
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
   if (world_rank == 0) {
-    flat_input_ = std::get<0>(in);
+    input_matrix_ = std::get<0>(in);
     rows_ = std::get<1>(in);
     cols_ = std::get<2>(in);
   } else {
-    flat_input_ = std::vector<int>();
+    input_matrix_ = std::vector<int>();
     rows_ = -1;
     cols_ = -1;
   }
@@ -50,7 +50,9 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
     return true;
   }
 
-  CalculateLocalColumns(world_rank, world_size);
+  int cols_base = cols_ / world_size;
+  int remainder = cols_ % world_size;
+  local_cols_ = cols_base + (world_rank < remainder ? 1 : 0);
 
   std::vector<int> send_counts;
   std::vector<int> displacements;
@@ -60,19 +62,16 @@ bool TsibarevaEMatrixColumnMaxMPI::RunImpl() {
 
   std::vector<int> local_maxs = CalculateLocalColumnMaxima();
 
-  int base_cols = cols_ / world_size;
-  int remainder = cols_ % world_size;
-
   std::vector<int> recv_counts(world_size);
   std::vector<int> displs(world_size);
   std::vector<int> global_result(cols_);
 
-  int total_displ = 0;
+  int mdisplace = 0;
   for (int i = 0; i < world_size; i++) {
-    int proc_cols = base_cols + (i < remainder ? 1 : 0);
+    int proc_cols = cols_base + (i < remainder ? 1 : 0);
     recv_counts[i] = proc_cols;
-    displs[i] = total_displ;
-    total_displ += proc_cols;
+    displs[i] = mdisplace;
+    mdisplace += proc_cols;
   }
 
   MPI_Allgatherv(local_maxs.data(), local_cols_, MPI_INT, global_result.data(), recv_counts.data(), displs.data(),
@@ -87,12 +86,6 @@ void TsibarevaEMatrixColumnMaxMPI::BroadcastMatrixDimensions() {
   MPI_Bcast(&cols_, 1, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
-void TsibarevaEMatrixColumnMaxMPI::CalculateLocalColumns(int world_rank, int world_size) {
-  int base_cols = cols_ / world_size;
-  int remainder = cols_ % world_size;
-  local_cols_ = base_cols + (world_rank < remainder ? 1 : 0);
-}
-
 void TsibarevaEMatrixColumnMaxMPI::PrepareScatterParameters(int world_rank, int world_size,
                                                             std::vector<int> &send_counts,
                                                             std::vector<int> &displacements) const {
@@ -100,12 +93,12 @@ void TsibarevaEMatrixColumnMaxMPI::PrepareScatterParameters(int world_rank, int 
   displacements.resize(world_size);
 
   if (world_rank == 0) {
-    int base_cols = cols_ / world_size;
+    int cols_base = cols_ / world_size;
     int remainder = cols_ % world_size;
     int displ = 0;
 
     for (int i = 0; i < world_size; i++) {
-      int proc_cols = base_cols + (i < remainder ? 1 : 0);
+      int proc_cols = cols_base + (i < remainder ? 1 : 0);
       send_counts[i] = proc_cols * rows_;
       displacements[i] = displ;
       displ += send_counts[i];
@@ -119,7 +112,7 @@ void TsibarevaEMatrixColumnMaxMPI::PrepareScatterParameters(int world_rank, int 
 void TsibarevaEMatrixColumnMaxMPI::ScatterMatrixData(int world_rank, const std::vector<int> &send_counts,
                                                      const std::vector<int> &displacements) {
   local_flat_data_.resize(static_cast<size_t>(local_cols_) * rows_);
-  MPI_Scatterv(world_rank == 0 ? flat_input_.data() : nullptr, send_counts.data(), displacements.data(), MPI_INT,
+  MPI_Scatterv(world_rank == 0 ? input_matrix_.data() : nullptr, send_counts.data(), displacements.data(), MPI_INT,
                local_flat_data_.data(), static_cast<int>(local_flat_data_.size()), MPI_INT, 0, MPI_COMM_WORLD);
 }
 
