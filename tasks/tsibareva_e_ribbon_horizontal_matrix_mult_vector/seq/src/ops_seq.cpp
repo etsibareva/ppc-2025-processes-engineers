@@ -33,7 +33,7 @@ bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::RunImpl() {
   const auto &flat_matrix = std::get<0>(GetInput());
   const auto &flat_vector = std::get<3>(GetInput());
 
-  input_matrix_.resize(static_cast<size_t>(rows_ * cols_));
+  input_matrix_.resize(static_cast<size_t>(rows_) * static_cast<size_t>(cols_));
   input_vector_.resize(static_cast<size_t>(cols_));
 
   std::ranges::copy(flat_matrix, input_matrix_.begin());
