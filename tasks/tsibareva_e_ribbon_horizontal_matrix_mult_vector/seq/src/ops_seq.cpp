@@ -9,18 +9,10 @@
 
 namespace tsibareva_e_ribbon_horizontal_matrix_mult_vector {
 
-TsibarevaERibbonHorizontalMatrixMultVectorSEQ::TsibarevaERibbonHorizontalMatrixMultVectorSEQ(const InType &in) {
+TsibarevaERibbonHorizontalMatrixMultVectorSEQ::TsibarevaERibbonHorizontalMatrixMultVectorSEQ(const InType &in)
+    : rows_(std::get<1>(in)), cols_(std::get<2>(in)) {
   SetTypeOfTask(GetStaticTypeOfTask());
-
   GetInput() = in;
-
-  rows_ = std::get<1>(GetInput());
-  cols_ = std::get<2>(GetInput());
-
-  input_matrix_ = std::vector<int>();
-  input_vector_ = std::vector<int>();
-
-  GetOutput() = std::vector<int>();
 }
 
 bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::ValidationImpl() {
@@ -33,7 +25,7 @@ bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::PreProcessingImpl() {
     return true;
   }
 
-  GetOutput() = std::vector<int>(rows_, 0);
+  GetOutput() = std::vector<int>(static_cast<size_t>(rows_), 0);
   return true;
 }
 
@@ -41,11 +33,11 @@ bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::RunImpl() {
   const auto &flat_matrix = std::get<0>(GetInput());
   const auto &flat_vector = std::get<3>(GetInput());
 
-  input_matrix_.resize(flat_matrix.size());
-  std::copy(flat_matrix.begin(), flat_matrix.end(), input_matrix_.begin());
+  input_matrix_.resize(static_cast<size_t>(rows_ * cols_));
+  input_vector_.resize(static_cast<size_t>(cols_));
 
-  input_vector_.resize(flat_vector.size());
-  std::copy(flat_vector.begin(), flat_vector.end(), input_vector_.begin());
+  std::ranges::copy(flat_matrix, input_matrix_.begin());
+  std::ranges::copy(flat_vector, input_vector_.begin());
 
   if (rows_ == 0 || cols_ == 0) {
     return true;
