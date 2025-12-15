@@ -43,7 +43,7 @@ bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::RunImpl() {
     return true;
   }
 
-  if (cols_ != static_cast<int>(input_vector_.size())) {
+  if (std::cmp_not_equal(cols_, static_cast<int>(input_vector_.size()))) {
     return true;
   }
 

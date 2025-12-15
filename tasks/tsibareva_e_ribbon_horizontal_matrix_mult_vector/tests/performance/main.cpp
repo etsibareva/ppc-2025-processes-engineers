@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <cstddef>
 #include <limits>
 #include <tuple>
@@ -14,14 +13,14 @@
 namespace tsibareva_e_ribbon_horizontal_matrix_mult_vector {
 
 class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kMatrixRows_ = 20000;
-  const int kMatrixCols_ = 20000;
+  const int kMatrixRows_ = 40000;
+  const int kMatrixCols_ = 40000;
   InType input_data_;
   OutType expected_output_;
 
   void SetUp() override {
     std::vector<int> flat_matrix(static_cast<size_t>(kMatrixRows_ * kMatrixCols_));
-    std::vector<int> vector_(kMatrixCols_);
+    std::vector<int> vector(kMatrixCols_);
 
     for (int row = 0; row < kMatrixRows_; ++row) {
       for (int col = 0; col < kMatrixCols_; ++col) {
@@ -34,13 +33,13 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
     }
 
     for (int col = 0; col < kMatrixCols_; ++col) {
-      vector_[col] = (col * 19) % 100;
+      vector[col] = (col * 19) % 100;
       if (col % 5 == 0) {
-        vector_[col] = -vector_[col];
+        vector[col] = -vector[col];
       }
     }
     expected_output_.resize(kMatrixRows_, 0);
-    input_data_ = std::make_tuple(flat_matrix, kMatrixRows_, kMatrixCols_, vector_);
+    input_data_ = std::make_tuple(flat_matrix, kMatrixRows_, kMatrixCols_, vector);
   }
 
   bool CheckTestOutputData(OutType &output_data) final {

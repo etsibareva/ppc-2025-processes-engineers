@@ -2,9 +2,7 @@
 
 #include <mpi.h>
 
-#include <algorithm>
 #include <cstddef>
-#include <limits>
 #include <vector>
 
 #include "tsibareva_e_ribbon_horizontal_matrix_mult_vector/common/include/common.hpp"
