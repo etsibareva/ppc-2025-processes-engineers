@@ -14,8 +14,8 @@ TsibarevaERibbonHorizontalMatrixMultVectorSEQ::TsibarevaERibbonHorizontalMatrixM
 
   GetInput() = in;
 
-  int rows_ = std::get<1>(GetInput());
-  int cols_ = std::get<2>(GetInput());
+  rows_ = std::get<1>(GetInput());
+  cols_ = std::get<2>(GetInput());
 
   input_matrix_ = std::vector<int>();
   input_vector_ = std::vector<int>();
