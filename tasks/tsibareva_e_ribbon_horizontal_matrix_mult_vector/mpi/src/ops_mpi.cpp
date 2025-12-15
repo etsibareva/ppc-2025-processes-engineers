@@ -15,11 +15,13 @@ TsibarevaERibbonHorizontalMatrixMultVectorMPI::TsibarevaERibbonHorizontalMatrixM
   int world_rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
+  GetInput() = in;
+
   if (world_rank == 0) {
-    input_matrix_ = std::get<0>(in);
-    rows_ = std::get<1>(in);
-    cols_ = std::get<2>(in);
-    local_vector_ = std::get<3>(in);
+    input_matrix_ = std::get<0>(GetInput());
+    rows_ = std::get<1>(GetInput());
+    cols_ = std::get<2>(GetInput());
+    local_vector_ = std::get<3>(GetInput());
   } else {
     input_matrix_ = std::vector<int>();
     rows_ = -1;

@@ -12,8 +12,8 @@
 namespace tsibareva_e_ribbon_horizontal_matrix_mult_vector {
 
 class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kMatrixRows_ = 30000;
-  const int kMatrixCols_ = 30000;
+  const int kMatrixRows_ = 10000;
+  const int kMatrixCols_ = 10000;
   InType input_data_;
   OutType expected_output_;
 

@@ -1,5 +1,6 @@
 #include "tsibareva_e_ribbon_horizontal_matrix_mult_vector/seq/include/ops_seq.hpp"
 
+#include <algorithm>  // для std::copy
 #include <cstddef>
 #include <utility>
 #include <vector>
@@ -11,15 +12,13 @@ namespace tsibareva_e_ribbon_horizontal_matrix_mult_vector {
 TsibarevaERibbonHorizontalMatrixMultVectorSEQ::TsibarevaERibbonHorizontalMatrixMultVectorSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
 
-  const auto &flat_matrix = std::get<0>(in);
-  int rows = std::get<1>(in);
-  int cols = std::get<2>(in);
-  const auto &flat_vector = std::get<3>(in);
+  GetInput() = in;
 
-  input_matrix_ = flat_matrix;
-  rows_ = rows;
-  cols_ = cols;
-  input_vector_ = flat_vector;
+  int rows_ = std::get<1>(GetInput());
+  int cols_ = std::get<2>(GetInput());
+
+  input_matrix_ = std::vector<int>();
+  input_vector_ = std::vector<int>();
 
   GetOutput() = std::vector<int>();
 }
@@ -39,6 +38,15 @@ bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::PreProcessingImpl() {
 }
 
 bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::RunImpl() {
+  const auto &flat_matrix = std::get<0>(GetInput());
+  const auto &flat_vector = std::get<3>(GetInput());
+
+  input_matrix_.resize(flat_matrix.size());
+  std::copy(flat_matrix.begin(), flat_matrix.end(), input_matrix_.begin());
+
+  input_vector_.resize(flat_vector.size());
+  std::copy(flat_vector.begin(), flat_vector.end(), input_vector_.begin());
+
   if (rows_ == 0 || cols_ == 0) {
     return true;
   }
