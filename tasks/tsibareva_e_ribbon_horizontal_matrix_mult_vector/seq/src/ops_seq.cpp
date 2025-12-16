@@ -1,6 +1,5 @@
 #include "tsibareva_e_ribbon_horizontal_matrix_mult_vector/seq/include/ops_seq.hpp"
 
-#include <algorithm>  // для std::copy
 #include <cstddef>
 #include <utility>
 #include <vector>
