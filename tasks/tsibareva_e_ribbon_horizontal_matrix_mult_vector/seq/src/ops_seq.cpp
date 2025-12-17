@@ -1,7 +1,6 @@
 #include "tsibareva_e_ribbon_horizontal_matrix_mult_vector/seq/include/ops_seq.hpp"
 
 #include <cstddef>
-#include <utility>
 #include <vector>
 
 #include "tsibareva_e_ribbon_horizontal_matrix_mult_vector/common/include/common.hpp"
@@ -21,10 +20,9 @@ bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::ValidationImpl() {
 bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::PreProcessingImpl() {
   if (rows_ == 0 || cols_ == 0) {
     GetOutput() = std::vector<int>();
-    return true;
+  } else {
+    GetOutput() = std::vector<int>(static_cast<size_t>(rows_), 0);
   }
-
-  GetOutput() = std::vector<int>(static_cast<size_t>(rows_), 0);
   return true;
 }
 
@@ -34,14 +32,6 @@ bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::RunImpl() {
 
   input_matrix_ = std::vector<int>(flat_matrix);
   input_vector_ = std::vector<int>(flat_vector);
-
-  if (rows_ == 0 || cols_ == 0) {
-    return true;
-  }
-
-  if (std::cmp_not_equal(cols_, static_cast<int>(input_vector_.size()))) {
-    return true;
-  }
 
   auto &result_vector = GetOutput();
 
