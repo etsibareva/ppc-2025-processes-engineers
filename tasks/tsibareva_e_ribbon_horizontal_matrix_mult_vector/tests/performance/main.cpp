@@ -23,7 +23,7 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
 
     for (int row = 0; row < kMatrixRows_; ++row) {
       for (int col = 0; col < kMatrixCols_; ++col) {
-        int value = ((row * 17) + (col * 13)) % 1000;
+        int value = ((row * 17) + (col * 11)) % 1000;
         if ((row + col) % 7 == 0) {
           value = -value;
         }
@@ -32,7 +32,7 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
     }
 
     for (int col = 0; col < kMatrixCols_; ++col) {
-      vector[col] = (col * 19) % 100;
+      vector[col] = (col * 15) % 100;
       if (col % 5 == 0) {
         vector[col] = -vector[col];
       }
