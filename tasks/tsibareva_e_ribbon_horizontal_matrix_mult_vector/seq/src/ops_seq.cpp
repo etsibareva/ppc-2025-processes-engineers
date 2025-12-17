@@ -35,14 +35,6 @@ bool TsibarevaERibbonHorizontalMatrixMultVectorSEQ::RunImpl() {
   input_matrix_ = std::vector<int>(flat_matrix);
   input_vector_ = std::vector<int>(flat_vector);
 
-  if (rows_ == 0 || cols_ == 0) {
-    return true;
-  }
-
-  if (std::cmp_not_equal(cols_, static_cast<int>(input_vector_.size()))) {
-    return true;
-  }
-
   auto &result_vector = GetOutput();
 
   for (int row = 0; row < rows_; ++row) {
