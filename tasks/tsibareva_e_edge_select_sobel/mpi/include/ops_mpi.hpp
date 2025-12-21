@@ -25,24 +25,22 @@ class TsibarevaEEdgeSelectSobelMPI : public BaseTask {
   int local_height_ = 0;
   int local_height_with_halo_ = 0;
 
-  // Вспомогательные методы
   void BroadcastParameters();
   void DistributeRows();
-  std::vector<int> ComputeLocalGradients();
-  int CalculateGradientX(int x, int y_in_local_data);
-  int CalculateGradientY(int x, int y_in_local_data);
+  std::vector<int> LocalGradientsComputing();
+  int GradientX(int x, int y_in_local_data);
+  int GradientY(int x, int y_in_local_data);
   void GatherResults(const std::vector<int> &local_result);
-  void CalculateLocalRows(int world_rank, int world_size);
+  void LocalRowsComputing(int world_rank, int world_size);
 
-  void CalculateRowDistribution(int world_rank, int world_size, int &base_rows, int &remainder, int &real_rows,
+  void RowDistributionComputing(int world_rank, int world_size, int &base_rows, int &remainder, int &real_rows,
                                 int &need_top_halo, int &need_bottom_halo, int &total_rows);
 
-  void CalculateSendParameters(int world_rank, int world_size, int base_rows, int remainder,
-                               std::vector<int> &real_rows_per_proc, std::vector<int> &send_counts,
-                               std::vector<int> &send_displs);
+  void SendParameters(int world_rank, int world_size, int base_rows, int remainder,
+                      std::vector<int> &real_rows_per_proc, std::vector<int> &send_counts,
+                      std::vector<int> &send_displs) const;
 
-  void PerformDataDistribution(int world_rank, const std::vector<int> &send_counts,
-                               const std::vector<int> &send_displs);
+  void DataDistribution(int world_rank, const std::vector<int> &send_counts, const std::vector<int> &send_displs);
 
   bool ValidationImpl() override;
   bool PreProcessingImpl() override;

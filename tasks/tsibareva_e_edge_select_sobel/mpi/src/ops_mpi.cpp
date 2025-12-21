@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 #include "tsibareva_e_edge_select_sobel/common/include/common.hpp"
@@ -48,7 +49,7 @@ bool TsibarevaEEdgeSelectSobelMPI::RunImpl() {
 
   DistributeRows();
 
-  std::vector<int> local_result = ComputeLocalGradients();
+  std::vector<int> local_result = LocalGradientsComputing();
 
   GatherResults(local_result);
 
@@ -70,7 +71,7 @@ void TsibarevaEEdgeSelectSobelMPI::BroadcastParameters() {
   MPI_Bcast(&threshold_, 1, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
-void TsibarevaEEdgeSelectSobelMPI::CalculateRowDistribution(int world_rank, int world_size, int &base_rows,
+void TsibarevaEEdgeSelectSobelMPI::RowDistributionComputing(int world_rank, int world_size, int &base_rows,
                                                             int &remainder, int &real_rows, int &need_top_halo,
                                                             int &need_bottom_halo, int &total_rows) {
   // базовое (основное) количество строк на процесс
@@ -91,10 +92,9 @@ void TsibarevaEEdgeSelectSobelMPI::CalculateRowDistribution(int world_rank, int 
   local_pixels_.resize(static_cast<size_t>(total_rows) * width_, 0);
 }
 
-void TsibarevaEEdgeSelectSobelMPI::CalculateSendParameters(int world_rank, int world_size, int base_rows, int remainder,
-                                                           std::vector<int> &real_rows_per_proc,
-                                                           std::vector<int> &send_counts,
-                                                           std::vector<int> &send_displs) {
+void TsibarevaEEdgeSelectSobelMPI::SendParameters(int world_rank, int world_size, int base_rows, int remainder,
+                                                  std::vector<int> &real_rows_per_proc, std::vector<int> &send_counts,
+                                                  std::vector<int> &send_displs) const {
   if (world_rank == 0) {
     int current_row = 0;
     for (int dest = 0; dest < world_size; ++dest) {
@@ -120,8 +120,8 @@ void TsibarevaEEdgeSelectSobelMPI::CalculateSendParameters(int world_rank, int w
   }
 }
 
-void TsibarevaEEdgeSelectSobelMPI::PerformDataDistribution(int world_rank, const std::vector<int> &send_counts,
-                                                           const std::vector<int> &send_displs) {
+void TsibarevaEEdgeSelectSobelMPI::DataDistribution(int world_rank, const std::vector<int> &send_counts,
+                                                    const std::vector<int> &send_displs) {
   MPI_Scatterv(world_rank == 0 ? input_pixels_.data() : nullptr, send_counts.data(), send_displs.data(), MPI_INT,
                local_pixels_.data(), static_cast<int>(local_pixels_.size()), MPI_INT, 0, MPI_COMM_WORLD);
 }
@@ -139,19 +139,19 @@ void TsibarevaEEdgeSelectSobelMPI::DistributeRows() {
   int need_bottom_halo = 0;
   int total_rows = 0;
 
-  CalculateRowDistribution(world_rank, world_size, base_rows, remainder, real_rows, need_top_halo, need_bottom_halo,
+  RowDistributionComputing(world_rank, world_size, base_rows, remainder, real_rows, need_top_halo, need_bottom_halo,
                            total_rows);
 
   std::vector<int> send_counts(world_size, 0);
   std::vector<int> send_displs(world_size, 0);
   std::vector<int> real_rows_per_proc(world_size, 0);
 
-  CalculateSendParameters(world_rank, world_size, base_rows, remainder, real_rows_per_proc, send_counts, send_displs);
+  SendParameters(world_rank, world_size, base_rows, remainder, real_rows_per_proc, send_counts, send_displs);
 
-  PerformDataDistribution(world_rank, send_counts, send_displs);
+  DataDistribution(world_rank, send_counts, send_displs);
 }
 
-std::vector<int> TsibarevaEEdgeSelectSobelMPI::ComputeLocalGradients() {
+std::vector<int> TsibarevaEEdgeSelectSobelMPI::LocalGradientsComputing() {
   int world_rank = 0;
   int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
@@ -165,8 +165,8 @@ std::vector<int> TsibarevaEEdgeSelectSobelMPI::ComputeLocalGradients() {
       int y_in_local_data = local_y + ((world_rank > 0) ? 1 : 0);
 
       for (int col = 0; col < width_; ++col) {
-        int gx = CalculateGradientX(col, y_in_local_data);
-        int gy = CalculateGradientY(col, y_in_local_data);
+        int gx = GradientX(col, y_in_local_data);
+        int gy = GradientY(col, y_in_local_data);
 
         int mag = static_cast<int>(std::sqrt((gx * gx) + (gy * gy) + 0.0));
         local_result[(static_cast<size_t>(local_y) * width_) + col] = (mag <= threshold_) ? 0 : mag;
@@ -177,7 +177,7 @@ std::vector<int> TsibarevaEEdgeSelectSobelMPI::ComputeLocalGradients() {
   return local_result;
 }
 
-int TsibarevaEEdgeSelectSobelMPI::CalculateGradientX(int x, int y_in_local_data) {
+int TsibarevaEEdgeSelectSobelMPI::GradientX(int x, int y_in_local_data) {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {
@@ -195,7 +195,7 @@ int TsibarevaEEdgeSelectSobelMPI::CalculateGradientX(int x, int y_in_local_data)
   return sum;
 }
 
-int TsibarevaEEdgeSelectSobelMPI::CalculateGradientY(int x, int y_in_local_data) {
+int TsibarevaEEdgeSelectSobelMPI::GradientY(int x, int y_in_local_data) {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {

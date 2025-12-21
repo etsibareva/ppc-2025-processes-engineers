@@ -1,6 +1,7 @@
 #include "tsibareva_e_edge_select_sobel/seq/include/ops_seq.hpp"
 
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 #include "tsibareva_e_edge_select_sobel/common/include/common.hpp"
@@ -27,18 +28,18 @@ bool TsibarevaEEdgeSelectSobelSEQ::PreProcessingImpl() {
 }
 
 bool TsibarevaEEdgeSelectSobelSEQ::RunImpl() {
-  const auto &flat_pixels_ = std::get<0>(GetInput());
-  input_pixels_ = std::vector<int>(flat_pixels_);
+  const auto &flat_pixels = std::get<0>(GetInput());
+  input_pixels_ = std::vector<int>(flat_pixels);
 
-  auto &output_pixels_ = GetOutput();
+  auto &output_pixels = GetOutput();
 
   for (int row = 0; row < height_; ++row) {
     for (int col = 0; col < width_; ++col) {
-      int gx = CalculateGradientX(input_pixels_, col, row);
-      int gy = CalculateGradientY(input_pixels_, col, row);
+      int gx = GradientX(input_pixels_, col, row);
+      int gy = GradientY(input_pixels_, col, row);
 
       int mag = static_cast<int>(std::sqrt((gx * gx) + (gy * gy) + 0.0));
-      output_pixels_[(static_cast<size_t>(row) * width_) + col] = (mag <= threshold_) ? 0 : mag;
+      output_pixels[(static_cast<size_t>(row) * width_) + col] = (mag <= threshold_) ? 0 : mag;
     }
   }
   return true;
@@ -48,7 +49,7 @@ bool TsibarevaEEdgeSelectSobelSEQ::PostProcessingImpl() {
   return true;
 }
 
-int TsibarevaEEdgeSelectSobelSEQ::CalculateGradientX(const std::vector<int> &pixels, int x, int y) const {
+int TsibarevaEEdgeSelectSobelSEQ::GradientX(const std::vector<int> &pixels, int x, int y) const {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {
@@ -67,7 +68,7 @@ int TsibarevaEEdgeSelectSobelSEQ::CalculateGradientX(const std::vector<int> &pix
   return sum;
 }
 
-int TsibarevaEEdgeSelectSobelSEQ::CalculateGradientY(const std::vector<int> &pixels, int x, int y) const {
+int TsibarevaEEdgeSelectSobelSEQ::GradientY(const std::vector<int> &pixels, int x, int y) const {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {

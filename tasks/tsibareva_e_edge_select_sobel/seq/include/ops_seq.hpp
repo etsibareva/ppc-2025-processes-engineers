@@ -20,13 +20,8 @@ class TsibarevaEEdgeSelectSobelSEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  int CalculateGradientX(const std::vector<int> &pixels, int x, int y) const;
-  int CalculateGradientY(const std::vector<int> &pixels, int x, int y) const;
-  int CalculateMagnitude(int gx, int gy) const;
-  int ApplyThreshold(int magnitude) const;
-  int GetSobelYWeight(int kx, int ky) const;
-  int GetSobelXWeight(int kx, int ky) const;
-  int ApplyCeilingRounding(int magnitude, int step) const;
+  int GradientX(const std::vector<int> &pixels, int x, int y) const;
+  int GradientY(const std::vector<int> &pixels, int x, int y) const;
 
   int height_ = 0;
   int width_ = 0;
