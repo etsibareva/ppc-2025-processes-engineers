@@ -19,9 +19,6 @@ class TsibarevaEEdgeSelectSobelMPI : public BaseTask {
   int width_ = 0;
   int threshold_ = 0;
 
-  int world_rank_ = 0;
-  int world_size_ = 0;
-
   std::vector<int> input_pixels_;
 
   std::vector<int> local_pixels_;

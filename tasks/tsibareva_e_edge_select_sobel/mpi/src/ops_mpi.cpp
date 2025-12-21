@@ -18,7 +18,9 @@ const std::vector<std::vector<int>> SOBEL_Y = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1
 TsibarevaEEdgeSelectSobelMPI::TsibarevaEEdgeSelectSobelMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
 
-  if (world_rank_ == 0) {
+  int world_rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+  if (world_rank == 0) {
     GetInput() = in;
     input_pixels_ = std::get<0>(GetInput());
     height_ = std::get<1>(GetInput());
