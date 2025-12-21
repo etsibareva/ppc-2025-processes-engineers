@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <vector>
 
 #include "tsibareva_e_edge_select_sobel/common/include/common.hpp"
@@ -40,11 +39,6 @@ bool TsibarevaEEdgeSelectSobelSEQ::RunImpl() {
 
   auto &output_pixels_ = GetOutput();
 
-  if (height_ < 3 || width_ < 3) {
-    std::copy(input_pixels_.begin(), input_pixels_.end(), output_pixels_.begin());
-    return true;
-  }
-
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
       int gx = CalculateGradientX(input_pixels_, x, y);
@@ -56,15 +50,6 @@ bool TsibarevaEEdgeSelectSobelSEQ::RunImpl() {
       output_pixels_[static_cast<size_t>(y * width_ + x)] = result;
     }
   }
-
-  std::cout << "Result SEQ" << " threshold=" << threshold_ << ":" << std::endl;
-  for (int y = 0; y < height_; ++y) {
-    for (int x = 0; x < width_; ++x) {
-      std::cout << GetOutput()[static_cast<size_t>(y * width_ + x)] << " ";
-    }
-    std::cout << std::endl;
-  }
-
   return true;
 }
 

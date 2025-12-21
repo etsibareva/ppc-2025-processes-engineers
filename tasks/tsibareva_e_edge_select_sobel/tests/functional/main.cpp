@@ -26,28 +26,6 @@ class TsibarevaERunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InTyp
     ImageType image_type = std::get<0>(params);
     input_data_ = GenerateTestData(image_type);
     expected_output_ = GenerateExpectedOutput(image_type);
-
-    // Отладочная информация
-    auto &input_pixels = std::get<0>(input_data_);
-    int height = std::get<1>(input_data_);
-    int width = std::get<2>(input_data_);
-    int threshold = std::get<3>(input_data_);
-
-    std::cout << "Input image (" << height << "x" << width << "), threshold=" << threshold << ":" << std::endl;
-    for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < width; ++x) {
-        std::cout << input_pixels[static_cast<size_t>(y * width + x)] << " ";
-      }
-      std::cout << std::endl;
-    }
-
-    std::cout << "Expected output (" << height << "x" << width << "), threshold=" << threshold << ":" << std::endl;
-    for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < width; ++x) {
-        std::cout << expected_output_[static_cast<size_t>(y * width + x)] << " ";
-      }
-      std::cout << std::endl;
-    };
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
@@ -69,11 +47,11 @@ TEST_P(TsibarevaERunFuncTestsProcesses, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 2> kTestParams = {std::make_tuple(ImageType::kTest1, "test1_small_square"),
-                                              std::make_tuple(ImageType::kTest2, "test2_real_img")/*,
-                                              std::make_tuple(ImageType::kTest3, "test3_large_square"),
-                                              std::make_tuple(ImageType::kTest4, "test4_rectangular"),
-                                              std::make_tuple(ImageType::kTest5, "test5_pattern")*/};
+const std::array<TestType, 7> kTestParams = {
+    std::make_tuple(ImageType::kTest1, "test1_small_square"), std::make_tuple(ImageType::kTest2, "test2_real_img"),
+    std::make_tuple(ImageType::kTest3, "test3_large_square"), std::make_tuple(ImageType::kTest4, "test4_rectangular"),
+    std::make_tuple(ImageType::kTest5, "test5_pattern"),      std::make_tuple(ImageType::kTest6, "test6_pattern"),
+    std::make_tuple(ImageType::kTest7, "test7_pattern")};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<TsibarevaEEdgeSelectSobelMPI, InType>(
                                                kTestParams, PPC_SETTINGS_tsibareva_e_edge_select_sobel),

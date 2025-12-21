@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <vector>
 
 #include "tsibareva_e_edge_select_sobel/common/include/common.hpp"
@@ -39,21 +38,12 @@ bool TsibarevaEEdgeSelectSobelMPI::PreProcessingImpl() {
 }
 
 bool TsibarevaEEdgeSelectSobelMPI::RunImpl() {
-  int world_rank, world_size;
+  int world_rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   BroadcastParameters();
-
-  if (height_ == 0 || width_ == 0) {
-    GetOutput() = std::vector<int>();
-    return true;
-  }
-
-  if (height_ < 3 || width_ < 3) {
-    GetOutput() = std::vector<int>();
-    return true;
-  }
 
   DistributeRows();
 
@@ -65,19 +55,6 @@ bool TsibarevaEEdgeSelectSobelMPI::RunImpl() {
 }
 
 bool TsibarevaEEdgeSelectSobelMPI::PostProcessingImpl() {
-  // Отладочная информация
-  int world_rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
-  if (world_rank == 0 && !GetOutput().empty()) {
-    std::cout << "Result MPI threshold=" << threshold_ << ":" << std::endl;
-    for (int y = 0; y < height_; ++y) {
-      for (int x = 0; x < width_; ++x) {
-        std::cout << GetOutput()[static_cast<size_t>(y * width_ + x)] << " ";
-      }
-      std::cout << std::endl;
-    }
-  }
   return true;
 }
 
@@ -92,7 +69,8 @@ void TsibarevaEEdgeSelectSobelMPI::BroadcastParameters() {
 }
 
 void TsibarevaEEdgeSelectSobelMPI::DistributeRows() {
-  int world_rank, world_size;
+  int world_rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
@@ -167,6 +145,7 @@ std::vector<int> TsibarevaEEdgeSelectSobelMPI::ComputeLocalGradients() {
         int gy = CalculateGradientY(x, y_in_local_data);
 
         int magnitude = static_cast<int>(std::sqrt(gx * gx + gy * gy + 0.0));
+
         local_result[static_cast<size_t>(local_y * width_ + x)] = (magnitude <= threshold_) ? 0 : magnitude;
       }
     }

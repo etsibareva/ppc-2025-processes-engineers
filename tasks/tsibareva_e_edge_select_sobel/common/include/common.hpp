@@ -12,7 +12,7 @@
 
 namespace tsibareva_e_edge_select_sobel {
 
-enum class ImageType : std::uint8_t { kTest1, kTest2, kTest3, kTest4, kTest5 };
+enum class ImageType : std::uint8_t { kTest1, kTest2, kTest3, kTest4, kTest5, kTest6, kTest7 };
 
 using InType = std::tuple<std::vector<int>, int, int, int>;  // pixels, height, width, threshold
 using OutType = std::vector<int>;
@@ -22,7 +22,6 @@ using BaseTask = ppc::task::Task<InType, OutType>;
 inline std::tuple<std::vector<int>, int, int> ReadImageFile(const std::string &filename) {
   std::ifstream file(filename);
   if (!file.is_open()) {
-    std::cerr << "Ошибка открытия файла: " << filename << std::endl;
     return {{}, 0, 0};
   }
 
@@ -38,7 +37,9 @@ inline std::tuple<std::vector<int>, int, int> ReadImageFile(const std::string &f
   for (int i = 0; i < height; ++i) {
     for (int j = 0; j < width; ++j) {
       int pixel;
-      file >> pixel;
+      if (!(file >> pixel)) {
+        pixels = std::vector<int>();
+      };
       pixels.push_back(pixel);
     }
   }
@@ -78,6 +79,12 @@ inline std::tuple<std::vector<int>, int, int, int> GenerateTestData(ImageType ty
     case ImageType::kTest5:
       filename = "data/img5.txt";
       break;
+    case ImageType::kTest6:
+      filename = "data/img6.txt";
+      break;
+    case ImageType::kTest7:
+      filename = "data/img7.txt";
+      break;
     default:
       filename = "data/img1.txt";
   }
@@ -107,6 +114,12 @@ inline std::vector<int> GenerateExpectedOutput(ImageType type) {
       break;
     case ImageType::kTest5:
       filename = "data/img5_res.txt";
+      break;
+    case ImageType::kTest6:
+      filename = "data/img6_res.txt";
+      break;
+    case ImageType::kTest7:
+      filename = "data/img7_res.txt";
       break;
     default:
       filename = "data/img1_res.txt";
