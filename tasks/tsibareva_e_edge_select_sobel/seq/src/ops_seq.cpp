@@ -49,7 +49,7 @@ bool TsibarevaEEdgeSelectSobelSEQ::PostProcessingImpl() {
   return true;
 }
 
-int TsibarevaEEdgeSelectSobelSEQ::GradientX(const std::vector<int> &pixels, int x, int y) const {
+int TsibarevaEEdgeSelectSobelSEQ::GradientX(const std::vector<int> &pixels, int x, int y) {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {
@@ -68,7 +68,7 @@ int TsibarevaEEdgeSelectSobelSEQ::GradientX(const std::vector<int> &pixels, int 
   return sum;
 }
 
-int TsibarevaEEdgeSelectSobelSEQ::GradientY(const std::vector<int> &pixels, int x, int y) const {
+int TsibarevaEEdgeSelectSobelSEQ::GradientY(const std::vector<int> &pixels, int x, int y) {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {

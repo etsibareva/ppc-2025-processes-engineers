@@ -20,8 +20,8 @@ class TsibarevaEEdgeSelectSobelSEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  int GradientX(const std::vector<int> &pixels, int x, int y) const;
-  int GradientY(const std::vector<int> &pixels, int x, int y) const;
+  int GradientX(const std::vector<int> &pixels, int x, int y);
+  int GradientY(const std::vector<int> &pixels, int x, int y);
 
   int height_ = 0;
   int width_ = 0;
