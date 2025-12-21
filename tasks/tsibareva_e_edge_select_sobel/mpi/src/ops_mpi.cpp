@@ -4,16 +4,15 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstddef>
 #include <vector>
 
 #include "tsibareva_e_edge_select_sobel/common/include/common.hpp"
 
 namespace tsibareva_e_edge_select_sobel {
 
-const std::vector<std::vector<int>> SOBEL_X = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+const std::vector<std::vector<int>> kSobelX = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
 
-const std::vector<std::vector<int>> SOBEL_Y = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
+const std::vector<std::vector<int>> kSobelY = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 
 TsibarevaEEdgeSelectSobelMPI::TsibarevaEEdgeSelectSobelMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
@@ -61,7 +60,8 @@ bool TsibarevaEEdgeSelectSobelMPI::PostProcessingImpl() {
 }
 
 void TsibarevaEEdgeSelectSobelMPI::BroadcastParameters() {
-  int world_rank, world_size;
+  int world_rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
@@ -70,34 +70,31 @@ void TsibarevaEEdgeSelectSobelMPI::BroadcastParameters() {
   MPI_Bcast(&threshold_, 1, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
-void TsibarevaEEdgeSelectSobelMPI::DistributeRows() {
-  int world_rank = 0;
-  int world_size = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-
+void TsibarevaEEdgeSelectSobelMPI::CalculateRowDistribution(int world_rank, int world_size, int &base_rows,
+                                                            int &remainder, int &real_rows, int &need_top_halo,
+                                                            int &need_bottom_halo, int &total_rows) {
   // базовое (основное) количество строк на процесс
-  int base_rows = height_ / world_size;
-  int remainder = height_ % world_size;
+  base_rows = height_ / world_size;
+  remainder = height_ % world_size;
 
   // предварительное количество строк на процесс
-  int real_rows = base_rows + (world_rank < remainder ? 1 : 0);
+  real_rows = base_rows + (world_rank < remainder ? 1 : 0);
   local_height_ = real_rows;
 
   // отдельно подсчитаны флаги, какому процессу требуется верхняя соседняя строка, какому - нижняя соседняя строка
-  int need_top_halo = (world_rank > 0) ? 1 : 0;
-  int need_bottom_halo = (world_rank < world_size - 1) ? 1 : 0;
+  need_top_halo = (world_rank > 0) ? 1 : 0;
+  need_bottom_halo = (world_rank < (world_size - 1)) ? 1 : 0;
 
   // итоговое количество строк на процесс (и подготовка локального буфера)
-  int total_rows = real_rows + need_top_halo + need_bottom_halo;
+  total_rows = real_rows + need_top_halo + need_bottom_halo;
   local_height_with_halo_ = total_rows;
   local_pixels_.resize(static_cast<size_t>(total_rows) * width_, 0);
+}
 
-  // расчет смещений в исходном массиве
-  std::vector<int> send_counts(world_size, 0);
-  std::vector<int> send_displs(world_size, 0);
-  std::vector<int> real_rows_per_proc(world_size, 0);
-
+void TsibarevaEEdgeSelectSobelMPI::CalculateSendParameters(int world_rank, int world_size, int base_rows, int remainder,
+                                                           std::vector<int> &real_rows_per_proc,
+                                                           std::vector<int> &send_counts,
+                                                           std::vector<int> &send_displs) {
   if (world_rank == 0) {
     int current_row = 0;
     for (int dest = 0; dest < world_size; ++dest) {
@@ -105,17 +102,13 @@ void TsibarevaEEdgeSelectSobelMPI::DistributeRows() {
       real_rows_per_proc[dest] = dest_real_rows;
 
       int dest_need_top_halo = (dest > 0) ? 1 : 0;
-      int dest_need_bottom_halo = (dest < world_size - 1) ? 1 : 0;
+      int dest_need_bottom_halo = (dest < (world_size - 1)) ? 1 : 0;
 
       int start_row_with_halo = current_row - dest_need_top_halo;
-      if (start_row_with_halo < 0) {
-        start_row_with_halo = 0;
-      }
 
       int end_row_with_halo = current_row + dest_real_rows + dest_need_bottom_halo - 1;
-      if (end_row_with_halo >= height_) {
-        end_row_with_halo = height_ - 1;
-      }
+
+      end_row_with_halo = std::min(end_row_with_halo, height_ - 1);
 
       int actual_rows = end_row_with_halo - start_row_with_halo + 1;
 
@@ -125,13 +118,42 @@ void TsibarevaEEdgeSelectSobelMPI::DistributeRows() {
       current_row += dest_real_rows;
     }
   }
+}
 
+void TsibarevaEEdgeSelectSobelMPI::PerformDataDistribution(int world_rank, const std::vector<int> &send_counts,
+                                                           const std::vector<int> &send_displs) {
   MPI_Scatterv(world_rank == 0 ? input_pixels_.data() : nullptr, send_counts.data(), send_displs.data(), MPI_INT,
                local_pixels_.data(), static_cast<int>(local_pixels_.size()), MPI_INT, 0, MPI_COMM_WORLD);
 }
 
+void TsibarevaEEdgeSelectSobelMPI::DistributeRows() {
+  int world_rank = 0;
+  int world_size = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+  int base_rows = 0;
+  int remainder = 0;
+  int real_rows = 0;
+  int need_top_halo = 0;
+  int need_bottom_halo = 0;
+  int total_rows = 0;
+
+  CalculateRowDistribution(world_rank, world_size, base_rows, remainder, real_rows, need_top_halo, need_bottom_halo,
+                           total_rows);
+
+  std::vector<int> send_counts(world_size, 0);
+  std::vector<int> send_displs(world_size, 0);
+  std::vector<int> real_rows_per_proc(world_size, 0);
+
+  CalculateSendParameters(world_rank, world_size, base_rows, remainder, real_rows_per_proc, send_counts, send_displs);
+
+  PerformDataDistribution(world_rank, send_counts, send_displs);
+}
+
 std::vector<int> TsibarevaEEdgeSelectSobelMPI::ComputeLocalGradients() {
-  int world_rank, world_size;
+  int world_rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
@@ -142,13 +164,12 @@ std::vector<int> TsibarevaEEdgeSelectSobelMPI::ComputeLocalGradients() {
     for (int local_y = 0; local_y < local_height_; ++local_y) {
       int y_in_local_data = local_y + ((world_rank > 0) ? 1 : 0);
 
-      for (int x = 0; x < width_; ++x) {
-        int gx = CalculateGradientX(x, y_in_local_data);
-        int gy = CalculateGradientY(x, y_in_local_data);
+      for (int col = 0; col < width_; ++col) {
+        int gx = CalculateGradientX(col, y_in_local_data);
+        int gy = CalculateGradientY(col, y_in_local_data);
 
-        int magnitude = static_cast<int>(std::sqrt(gx * gx + gy * gy + 0.0));
-
-        local_result[static_cast<size_t>(local_y * width_ + x)] = (magnitude <= threshold_) ? 0 : magnitude;
+        int mag = static_cast<int>(std::sqrt((gx * gx) + (gy * gy) + 0.0));
+        local_result[(static_cast<size_t>(local_y) * width_) + col] = (mag <= threshold_) ? 0 : mag;
       }
     }
   }
@@ -165,8 +186,8 @@ int TsibarevaEEdgeSelectSobelMPI::CalculateGradientX(int x, int y_in_local_data)
       int ny = y_in_local_data + ky;
 
       if (nx >= 0 && nx < width_ && ny >= 0 && ny < local_height_with_halo_) {
-        int pixel = local_pixels_[static_cast<size_t>(ny * width_ + nx)];
-        sum += pixel * SOBEL_X[ky + 1][kx + 1];
+        int pixel = local_pixels_[(static_cast<size_t>(ny) * width_) + nx];
+        sum += pixel * kSobelX[ky + 1][kx + 1];
       }
     }
   }
@@ -183,8 +204,8 @@ int TsibarevaEEdgeSelectSobelMPI::CalculateGradientY(int x, int y_in_local_data)
       int ny = y_in_local_data + ky;
 
       if (nx >= 0 && nx < width_ && ny >= 0 && ny < local_height_with_halo_) {
-        int pixel = local_pixels_[static_cast<size_t>(ny * width_ + nx)];
-        sum += pixel * SOBEL_Y[ky + 1][kx + 1];
+        int pixel = local_pixels_[(static_cast<size_t>(ny) * width_) + nx];
+        sum += pixel * kSobelY[ky + 1][kx + 1];
       }
     }
   }
@@ -193,7 +214,8 @@ int TsibarevaEEdgeSelectSobelMPI::CalculateGradientY(int x, int y_in_local_data)
 }
 
 void TsibarevaEEdgeSelectSobelMPI::GatherResults(const std::vector<int> &local_result) {
-  int world_rank, world_size;
+  int world_rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 

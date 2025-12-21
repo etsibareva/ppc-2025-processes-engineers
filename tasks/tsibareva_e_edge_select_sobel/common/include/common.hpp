@@ -2,8 +2,6 @@
 
 #include <cstdint>
 #include <fstream>
-#include <iostream>
-#include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -32,14 +30,14 @@ inline std::tuple<std::vector<int>, int, int> ReadImageFile(const std::string &f
   file >> width;
 
   std::vector<int> pixels;
-  pixels.reserve(height * width);
+  pixels.reserve(static_cast<size_t>(height) * width);
 
   for (int i = 0; i < height; ++i) {
     for (int j = 0; j < width; ++j) {
-      int pixel;
+      int pixel = 0;
       if (!(file >> pixel)) {
         pixels = std::vector<int>();
-      };
+      }
       pixels.push_back(pixel);
     }
   }
@@ -52,8 +50,7 @@ inline std::string GetDirectoryPath(const std::string &full_path) {
   std::string result = full_path;
   const std::string json_part = "settings.json";
 
-  if (result.size() >= json_part.size() &&
-      result.compare(result.size() - json_part.size(), json_part.size(), json_part) == 0) {
+  if (result.size() >= json_part.size() && result.ends_with(json_part)) {
     result.erase(result.size() - json_part.size(), json_part.size());
   }
 

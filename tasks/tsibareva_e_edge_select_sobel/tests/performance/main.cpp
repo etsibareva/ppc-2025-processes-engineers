@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <cstddef>
+#include <algorithm>
 #include <tuple>
 #include <vector>
 
@@ -23,28 +23,28 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
 
     for (int i = 0; i < height; ++i) {
       for (int j = 0; j < width; ++j) {
-        int val = (i * 21 + j * 31) % 211;
+        int val = ((i * 33) + (j * 111)) % 109;
         image_data[i][j] = val;
       }
     }
 
     for (int i = 0; i < height; ++i) {
       image_data[i][width / 2] = 255;
-      if (width / 2 + 1 < width) {
-        image_data[i][width / 2 + 1] = 255;
+      if (((width / 2) + 1) < width) {
+        image_data[i][(width / 2) + 1] = 255;
       }
     }
 
     for (int j = 0; j < width; ++j) {
       image_data[height / 3][j] = 255;
-      if (height / 3 + 1 < height) {
-        image_data[height / 3 + 1][j] = 255;
+      if (((height / 3) + 1) < height) {
+        image_data[(height / 3) + 1][j] = 255;
       }
     }
 
     for (int k = 0; k < std::min(height, width); ++k) {
       image_data[k][k] = 255;
-      if (k + 1 < width) {
+      if ((k + 1) < width) {
         image_data[k][k + 1] = 255;
       }
     }

@@ -1,17 +1,15 @@
 #include "tsibareva_e_edge_select_sobel/seq/include/ops_seq.hpp"
 
-#include <algorithm>
 #include <cmath>
-#include <cstddef>
 #include <vector>
 
 #include "tsibareva_e_edge_select_sobel/common/include/common.hpp"
 
 namespace tsibareva_e_edge_select_sobel {
 
-const std::vector<std::vector<int>> SOBEL_X = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+const std::vector<std::vector<int>> kSobelX = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
 
-const std::vector<std::vector<int>> SOBEL_Y = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
+const std::vector<std::vector<int>> kSobelY = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 
 TsibarevaEEdgeSelectSobelSEQ::TsibarevaEEdgeSelectSobelSEQ(const InType &in)
     : height_(std::get<1>(in)), width_(std::get<2>(in)), threshold_(std::get<3>(in)) {
@@ -20,11 +18,6 @@ TsibarevaEEdgeSelectSobelSEQ::TsibarevaEEdgeSelectSobelSEQ(const InType &in)
 }
 
 bool TsibarevaEEdgeSelectSobelSEQ::ValidationImpl() {
-  if (height_ == 0 || width_ == 0) {
-    GetOutput() = std::vector<int>();
-    return true;
-  }
-
   return true;
 }
 
@@ -39,15 +32,13 @@ bool TsibarevaEEdgeSelectSobelSEQ::RunImpl() {
 
   auto &output_pixels_ = GetOutput();
 
-  for (int y = 0; y < height_; ++y) {
-    for (int x = 0; x < width_; ++x) {
-      int gx = CalculateGradientX(input_pixels_, x, y);
-      int gy = CalculateGradientY(input_pixels_, x, y);
+  for (int row = 0; row < height_; ++row) {
+    for (int col = 0; col < width_; ++col) {
+      int gx = CalculateGradientX(input_pixels_, col, row);
+      int gy = CalculateGradientY(input_pixels_, col, row);
 
-      int m = static_cast<int>(std::sqrt(gx * gx + gy * gy + 0.0));
-      int result = (m <= threshold_) ? 0 : m;
-
-      output_pixels_[static_cast<size_t>(y * width_ + x)] = result;
+      int mag = static_cast<int>(std::sqrt((gx * gx) + (gy * gy) + 0.0));
+      output_pixels_[(static_cast<size_t>(row) * width_) + col] = (mag <= threshold_) ? 0 : mag;
     }
   }
   return true;
@@ -65,10 +56,10 @@ int TsibarevaEEdgeSelectSobelSEQ::CalculateGradientX(const std::vector<int> &pix
       int nx = x + kx;
       int ny = y + ky;
 
-      int weight = SOBEL_X[ky + 1][kx + 1];
+      int weight = kSobelX[ky + 1][kx + 1];
 
       if (nx >= 0 && nx < width_ && ny >= 0 && ny < height_) {
-        sum += weight * pixels[static_cast<size_t>(ny * width_ + nx)];
+        sum += weight * pixels[(static_cast<size_t>(ny) * width_) + nx];
       }
     }
   }
@@ -84,10 +75,10 @@ int TsibarevaEEdgeSelectSobelSEQ::CalculateGradientY(const std::vector<int> &pix
       int nx = x + kx;
       int ny = y + ky;
 
-      int weight = SOBEL_Y[ky + 1][kx + 1];
+      int weight = kSobelY[ky + 1][kx + 1];
 
       if (nx >= 0 && nx < width_ && ny >= 0 && ny < height_) {
-        sum += weight * pixels[static_cast<size_t>(ny * width_ + nx)];
+        sum += weight * pixels[(static_cast<size_t>(ny) * width_) + nx];
       }
     }
   }
