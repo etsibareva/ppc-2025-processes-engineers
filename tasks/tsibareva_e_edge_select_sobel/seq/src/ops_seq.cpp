@@ -35,8 +35,8 @@ bool TsibarevaEEdgeSelectSobelSEQ::RunImpl() {
 
   for (int row = 0; row < height_; ++row) {
     for (int col = 0; col < width_; ++col) {
-      int gx = GradientX(input_pixels_, col, row);
-      int gy = GradientY(input_pixels_, col, row);
+      int gx = GradientX(col, row);
+      int gy = GradientY(col, row);
 
       int mag = static_cast<int>(std::sqrt((gx * gx) + (gy * gy) + 0.0));
       output_pixels[(static_cast<size_t>(row) * width_) + col] = (mag <= threshold_) ? 0 : mag;
@@ -49,7 +49,7 @@ bool TsibarevaEEdgeSelectSobelSEQ::PostProcessingImpl() {
   return true;
 }
 
-int TsibarevaEEdgeSelectSobelSEQ::GradientX(const std::vector<int> &pixels, int x, int y) {
+int TsibarevaEEdgeSelectSobelSEQ::GradientX(int x, int y) {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {
@@ -60,7 +60,7 @@ int TsibarevaEEdgeSelectSobelSEQ::GradientX(const std::vector<int> &pixels, int 
       int weight = kSobelX[ky + 1][kx + 1];
 
       if (nx >= 0 && nx < width_ && ny >= 0 && ny < height_) {
-        sum += weight * pixels[(static_cast<size_t>(ny) * width_) + nx];
+        sum += weight * input_pixels_[(static_cast<size_t>(ny) * width_) + nx];
       }
     }
   }
@@ -68,7 +68,7 @@ int TsibarevaEEdgeSelectSobelSEQ::GradientX(const std::vector<int> &pixels, int 
   return sum;
 }
 
-int TsibarevaEEdgeSelectSobelSEQ::GradientY(const std::vector<int> &pixels, int x, int y) {
+int TsibarevaEEdgeSelectSobelSEQ::GradientY(int x, int y) {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {
@@ -79,7 +79,7 @@ int TsibarevaEEdgeSelectSobelSEQ::GradientY(const std::vector<int> &pixels, int 
       int weight = kSobelY[ky + 1][kx + 1];
 
       if (nx >= 0 && nx < width_ && ny >= 0 && ny < height_) {
-        sum += weight * pixels[(static_cast<size_t>(ny) * width_) + nx];
+        sum += weight * input_pixels_[(static_cast<size_t>(ny) * width_) + nx];
       }
     }
   }
