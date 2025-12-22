@@ -13,7 +13,7 @@ namespace tsibareva_e_edge_select_sobel {
 
 enum class ImageType : std::uint8_t { kTest1, kTest2, kTest3, kTest4, kTest5, kTest6, kTest7 };
 
-using InType = std::tuple<std::vector<int>, int, int, int>;  // pixels, height, width, threshold
+using InType = std::tuple<std::vector<int>, int, int, int>;
 using OutType = std::vector<int>;
 using TestType = std::tuple<ImageType, std::string>;
 using BaseTask = ppc::task::Task<InType, OutType>;

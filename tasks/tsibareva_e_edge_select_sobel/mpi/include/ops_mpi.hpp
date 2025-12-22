@@ -28,13 +28,13 @@ class TsibarevaEEdgeSelectSobelMPI : public BaseTask {
   void BroadcastParameters();
   void DistributeRows();
   std::vector<int> LocalGradientsComputing();
-  int GradientX(int x, int y_in_local_data);
-  int GradientY(int x, int y_in_local_data);
+  int GradientX(int x, int y);
+  int GradientY(int x, int y);
   void GatherResults(const std::vector<int> &local_result);
   void LocalRowsComputing(int world_rank, int world_size);
 
   void RowDistributionComputing(int world_rank, int world_size, int &base_rows, int &remainder, int &real_rows,
-                                int &need_top_halo, int &need_bottom_halo, int &total_rows);
+                                int &is_need_top_halo, int &is_need_bottom_halo, int &total_rows);
 
   void SendParameters(int world_rank, int world_size, int base_rows, int remainder,
                       std::vector<int> &real_rows_per_proc, std::vector<int> &send_counts,

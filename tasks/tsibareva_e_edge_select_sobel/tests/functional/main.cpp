@@ -48,10 +48,10 @@ TEST_P(TsibarevaERunFuncTestsProcesses, MatmulFromPic) {
 }
 
 const std::array<TestType, 7> kTestParams = {
-    std::make_tuple(ImageType::kTest1, "test1_small_square"), std::make_tuple(ImageType::kTest2, "test2_real_img"),
-    std::make_tuple(ImageType::kTest3, "test3_large_square"), std::make_tuple(ImageType::kTest4, "test4_rectangular"),
-    std::make_tuple(ImageType::kTest5, "test5_pattern"),      std::make_tuple(ImageType::kTest6, "test6_pattern"),
-    std::make_tuple(ImageType::kTest7, "test7_pattern")};
+    std::make_tuple(ImageType::kTest1, "test1_5x5"),   std::make_tuple(ImageType::kTest2, "test2_10x10_random"),
+    std::make_tuple(ImageType::kTest3, "test3_large"), std::make_tuple(ImageType::kTest4, "test4_5x10"),
+    std::make_tuple(ImageType::kTest5, "test5_10x5"),  std::make_tuple(ImageType::kTest6, "test6_3x3_kernel_size"),
+    std::make_tuple(ImageType::kTest7, "test7_2x2")};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<TsibarevaEEdgeSelectSobelMPI, InType>(
                                                kTestParams, PPC_SETTINGS_tsibareva_e_edge_select_sobel),

@@ -86,7 +86,7 @@ void TsibarevaEEdgeSelectSobelMPI::RowDistributionComputing(int world_rank, int 
   need_top_halo = (world_rank > 0) ? 1 : 0;
   need_bottom_halo = (world_rank < (world_size - 1)) ? 1 : 0;
 
-  // итоговое количество строк на процесс (и подготовка локального буфера)
+  // итоговое количество строк на процесс
   total_rows = real_rows + need_top_halo + need_bottom_halo;
   local_height_with_halo_ = total_rows;
   local_pixels_.resize(static_cast<size_t>(total_rows) * width_, 0);
@@ -103,11 +103,9 @@ void TsibarevaEEdgeSelectSobelMPI::SendParameters(int world_rank, int world_size
 
       int dest_need_top_halo = (dest > 0) ? 1 : 0;
       int dest_need_bottom_halo = (dest < (world_size - 1)) ? 1 : 0;
-
       int start_row_with_halo = current_row - dest_need_top_halo;
 
       int end_row_with_halo = current_row + dest_real_rows + dest_need_bottom_halo - 1;
-
       end_row_with_halo = std::min(end_row_with_halo, height_ - 1);
 
       int actual_rows = end_row_with_halo - start_row_with_halo + 1;
@@ -162,11 +160,11 @@ std::vector<int> TsibarevaEEdgeSelectSobelMPI::LocalGradientsComputing() {
     local_result.resize(static_cast<size_t>(local_height_) * width_, 0);
 
     for (int local_y = 0; local_y < local_height_; ++local_y) {
-      int y_in_local_data = local_y + ((world_rank > 0) ? 1 : 0);
+      int y = local_y + ((world_rank > 0) ? 1 : 0);
 
       for (int col = 0; col < width_; ++col) {
-        int gx = GradientX(col, y_in_local_data);
-        int gy = GradientY(col, y_in_local_data);
+        int gx = GradientX(col, y);
+        int gy = GradientY(col, y);
 
         int mag = static_cast<int>(std::sqrt((gx * gx) + (gy * gy) + 0.0));
         local_result[(static_cast<size_t>(local_y) * width_) + col] = (mag <= threshold_) ? 0 : mag;
@@ -177,13 +175,13 @@ std::vector<int> TsibarevaEEdgeSelectSobelMPI::LocalGradientsComputing() {
   return local_result;
 }
 
-int TsibarevaEEdgeSelectSobelMPI::GradientX(int x, int y_in_local_data) {
+int TsibarevaEEdgeSelectSobelMPI::GradientX(int x, int y) {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {
     for (int kx = -1; kx <= 1; ++kx) {
       int nx = x + kx;
-      int ny = y_in_local_data + ky;
+      int ny = y + ky;
 
       if (nx >= 0 && nx < width_ && ny >= 0 && ny < local_height_with_halo_) {
         int pixel = local_pixels_[(static_cast<size_t>(ny) * width_) + nx];
@@ -195,13 +193,13 @@ int TsibarevaEEdgeSelectSobelMPI::GradientX(int x, int y_in_local_data) {
   return sum;
 }
 
-int TsibarevaEEdgeSelectSobelMPI::GradientY(int x, int y_in_local_data) {
+int TsibarevaEEdgeSelectSobelMPI::GradientY(int x, int y) {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {
     for (int kx = -1; kx <= 1; ++kx) {
       int nx = x + kx;
-      int ny = y_in_local_data + ky;
+      int ny = y + ky;
 
       if (nx >= 0 && nx < width_ && ny >= 0 && ny < local_height_with_halo_) {
         int pixel = local_pixels_[(static_cast<size_t>(ny) * width_) + nx];

@@ -23,7 +23,7 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
 
     for (int i = 0; i < height; ++i) {
       for (int j = 0; j < width; ++j) {
-        int val = ((i * 33) + (j * 111)) % 109;
+        int val = ((i * 90) + (j * 111)) % 109;
         image_data[i][j] = val;
       }
     }
@@ -49,14 +49,14 @@ class TsibarevaERunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType
       }
     }
 
-    std::vector<int> flattened_data;
+    std::vector<int> flat_data;
     for (const auto &row : image_data) {
-      flattened_data.insert(flattened_data.end(), row.begin(), row.end());
+      flat_data.insert(flat_data.end(), row.begin(), row.end());
     }
 
     int threshold = 100;
-    input_data_ = std::make_tuple(flattened_data, height, width, threshold);
-    expected_output_ = std::vector<int>(flattened_data.size(), 0);
+    input_data_ = std::make_tuple(flat_data, height, width, threshold);
+    expected_output_ = std::vector<int>(flat_data.size(), 0);
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
